@@ -1,0 +1,46 @@
+# The Ceph cluster and the S3 object store. Stack specification 7.3.
+#
+# `awp-store` starts the RGW that serves the S3 API; the buckets themselves are
+# ObjectBucketClaims in charts/awp, so each workload mounts only the bucket it needs.
+#
+# Not installed locally on Windows or macOS (see rook-ceph.yaml), so this has not been
+# exercised on this machine.
+operatorNamespace: rook-ceph
+
+toolbox:
+  enabled: true
+
+cephClusterSpec:
+  mon:
+    count: 3
+  mgr:
+    count: 2
+  dashboard:
+    enabled: true
+    ssl: false
+  storage:
+    useAllNodes: true
+    useAllDevices: true
+
+cephBlockPools: []
+cephFileSystems: []
+
+cephObjectStores:
+  - name: awp-store
+    spec:
+      metadataPool:
+        failureDomain: host
+        replicated:
+          size: 3
+      dataPool:
+        failureDomain: host
+        replicated:
+          size: 3
+      preservePoolsOnDelete: true
+      gateway:
+        port: 80
+        instances: 2
+    storageClass:
+      enabled: true
+      name: awp-bucket
+      reclaimPolicy: Delete

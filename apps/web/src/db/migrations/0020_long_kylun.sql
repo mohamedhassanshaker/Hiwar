@@ -1,0 +1,2 @@
+ALTER TABLE "ai"."connection_allowed_model" DROP CONSTRAINT "connection_allowed_model_kind_check";--> statement-breakpoint
+ALTER TABLE "ai"."connection_allowed_model" ADD CONSTRAINT "connection_allowed_model_kind_check" CHECK ("kind" in ('Chat', 'Embedding', 'Image', 'Speech', 'Transcription', 'Rerank', 'Decision', 'Audio', 'Video'));

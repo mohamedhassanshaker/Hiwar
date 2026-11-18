@@ -1,0 +1,33 @@
+# The S3 endpoint for local tools (stack specification 8.2). Applied only when the
+# development object store is running, which is the `NO_ROOK=1` case; with Rook, the RGW
+# service is reached through its own route in the organisation's gateway configuration.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: object-storage
+  namespace: awp-data
+spec:
+  parentRefs: [{ name: awp, namespace: awp-system, sectionName: websecure }]
+  hostnames: ["s3.awp.localtest.me"]
+  rules:
+    - matches: [{ path: { type: PathPrefix, value: / } }]
+      filters:
+        - type: ExtensionRef
+          extensionRef: { group: traefik.io, kind: Middleware, name: admin-allowlist }
+      backendRefs: [{ name: minio, port: 9000 }]
+---
+# The development object store's console, behind its own login (the `minio-root` Secret).
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: minio-console
+  namespace: awp-data
+spec:
+  parentRefs: [{ name: awp, namespace: awp-system, sectionName: websecure }]
+  hostnames: ["minio.awp.localtest.me"]
+  rules:
+    - matches: [{ path: { type: PathPrefix, value: / } }]
+      filters:
+        - type: ExtensionRef
+          extensionRef: { group: traefik.io, kind: Middleware, name: admin-allowlist }
+      backendRefs: [{ name: minio-console, port: 9090 }]

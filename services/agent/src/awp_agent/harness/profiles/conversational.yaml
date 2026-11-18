@@ -1,0 +1,13 @@
+# Discussion room replies, the page assistant and embedded deployments.
+name: conversational
+description: Streams a reply into a room, the page assistant or a deployment.
+max_steps: 40
+max_tool_calls: 200
+agent_hop_limit: 2
+highest_tier_without_approval: T1
+verify: false
+stream: true
+storyline_mode: Guided
+step_guidance: >
+  Answer the person in the language they wrote in. Keep the reply short enough to read in a
+  chat panel. Ask one question at a time when something is missing.

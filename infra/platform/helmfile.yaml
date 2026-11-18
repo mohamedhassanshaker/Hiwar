@@ -1,0 +1,112 @@
+# The upstream charts, installed in the order of stack specification 8.5:
+# awp-system -> awp-data -> awp-ai -> awp-app. `needs` enforces the order inside one apply.
+#
+# No Go template appears in this file. helmfile 1 templates only a `*.gotmpl` file, so
+# everything that varies by environment lives in `values/<environment>.yaml` and in the
+# `*.yaml.gotmpl` release values beside it. Chart versions do not vary by environment.
+environments:
+  local:
+    values: [values/local.yaml.gotmpl]
+  test:
+    values: [values/test.yaml]
+  live:
+    values: [values/live.yaml]
+
+---
+
+repositories:
+  - name: neo4j
+    url: https://helm.neo4j.com/neo4j
+  - name: bitnami
+    url: https://charts.bitnami.com/bitnami
+  - name: temporal
+    url: https://go.temporal.io/helm-charts
+  - name: rook-release
+    url: https://charts.rook.io/release
+
+helmDefaults:
+  wait: true
+  timeout: 900
+  createNamespace: false
+
+releases:
+  # ------------------------------------------------------------------- awp-data
+  # Stack specification 7.1: one cluster, five databases, each component with its own
+  # role. The pooler is what the web application connects through.
+  - name: awp-pg
+    namespace: awp-data
+    chart: ../charts/cnpg-clusters
+    values: [values/awp-pg.yaml.gotmpl]
+    hooks:
+      - events: [postsync]
+        showlogs: true
+        # `bash <script>`, not the script itself: a hook command is executed directly and
+        # Windows has no shebang.
+        command: bash
+        args: [../../scripts/db-credentials.sh]
+
+  - name: valkey
+    namespace: awp-data
+    chart: bitnami/valkey
+    version: "3.0.26"
+    values: [values/valkey.yaml]
+
+  - name: neo4j
+    namespace: awp-data
+    chart: neo4j/neo4j
+    version: "5.26.0"
+    condition: profile.graph.enabled
+    values: [values/neo4j.yaml]
+
+  # Stack specification 7.3. Rook needs a raw block device, which a kind node on Windows
+  # or macOS does not have, so `NO_ROOK=1` turns both releases off and the S3 endpoint
+  # falls back to the development object store below. Code uses only the S3 API either way.
+  - name: rook-ceph
+    namespace: rook-ceph
+    chart: rook-release/rook-ceph
+    version: "1.21.0"
+    condition: profile.rook.enabled
+    createNamespace: true
+    values: [values/rook-ceph.yaml]
+
+  - name: rook-ceph-cluster
+    namespace: rook-ceph
+    chart: rook-release/rook-ceph-cluster
+    version: "1.21.0"
+    condition: profile.rook.enabled
+    createNamespace: true
+    needs: [rook-ceph/rook-ceph]
+    values: [values/rook-ceph-cluster.yaml]
+
+  # The development object store, used only when Rook is off. It speaks the same S3 API,
+  # so nothing in the application changes between the two.
+  - name: minio
+    namespace: awp-data
+    chart: oci://registry-1.docker.io/bitnamicharts/minio
+    version: "17.0.21"
+    condition: profile.devObjectStore.enabled
+    values: [values/minio.yaml]
+
+  # --------------------------------------------------------------------- awp-ai
+  - name: temporal
+    namespace: awp-ai
+    chart: temporal/temporal
+    version: "0.68.0"
+    needs: [awp-data/awp-pg]
+    values: [values/temporal.yaml]
+
+  # Stack specification 6.3: one Deployment, its database on the AWP cluster.
+  - name: phoenix
+    namespace: awp-ai
+    chart: ../charts/phoenix
+    condition: profile.tracing.enabled
+    needs: [awp-data/awp-pg]
+    values: [values/phoenix.yaml]
+
+  # Stack specification 6.1: the single path for every model, MCP and A2A call. The chart
+  # installs the control plane; the internal Gateway it serves is in infra/gateway/.
+  - name: agentgateway
+    namespace: awp-ai
+    chart: oci://ghcr.io/agentgateway/charts/agentgateway
+    version: "1.6.0"
+    values: [values/agentgateway.yaml]

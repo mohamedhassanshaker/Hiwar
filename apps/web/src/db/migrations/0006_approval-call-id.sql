@@ -1,0 +1,1 @@
+ALTER TABLE "ai"."approval" ADD COLUMN "call_id" text;

@@ -1,0 +1,1 @@
+ALTER TABLE "ai"."agent_question" ADD COLUMN "options" text[];

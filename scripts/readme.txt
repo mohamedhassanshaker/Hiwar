@@ -1,0 +1,1 @@
+ $env:ALLOW_IN_FLIGHT = "1"; .\scripts\deploy-cluster.bat; Remove-Item Env:ALLOW_IN_FLIGHT

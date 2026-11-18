@@ -1,0 +1,46 @@
+@font-face{font-family:'AvenirArabic-SharjahGovt';src:url('../fonts/AvenirArabic-SharjahGovt-Regular.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'AvenirArabic-SharjahGovt';src:url('../fonts/AvenirArabic-SharjahGovt-Medium.ttf') format('truetype');font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'AvenirArabic-SharjahGovt';src:url('../fonts/AvenirArabic-SharjahGovt-Heavy.ttf') format('truetype');font-weight:800 900;font-style:normal;font-display:swap}
+@font-face{font-family:'AvenirArabic-SharjahGov';src:url('../fonts/AvenirArabic-SharjahGovt-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
+@font-face{font-family:'AvenirArabic-SharjahGov';src:url('../fonts/AvenirArabic-SharjahGovt-Medium.ttf') format('truetype');font-weight:500;font-display:swap}
+@font-face{font-family:'AvenirArabic-SharjahGov';src:url('../fonts/AvenirArabic-SharjahGovt-Heavy.ttf') format('truetype');font-weight:800 900;font-display:swap}
+@font-face{font-family:'Avenir Arabic';src:url('../fonts/AvenirArabic-SharjahGovt-Medium.ttf') format('truetype');font-weight:500;font-display:swap}
+@font-face{font-family:'Avenir Arabic';src:url('../fonts/AvenirArabic-SharjahGovt-Heavy.ttf') format('truetype');font-weight:800 900;font-display:swap}
+@font-face{font-family:'Frutiger LT Arabic';src:url('../fonts/FrutigerLTArabic-45Light.ttf') format('truetype');font-weight:300;font-style:normal;font-display:swap;unicode-range:U+0600-06FF,U+0750-077F,U+08A0-08FF,U+FB50-FDFF,U+FE70-FEFF,U+200C-200F}
+@font-face{font-family:'Frutiger LT Arabic';src:url('../fonts/FrutigerLTStd-Light_1.otf') format('opentype');font-weight:300;font-style:normal;font-display:swap;unicode-range:U+0000-05FF,U+2000-206F,U+20A0-20CF,U+2100-214F}
+@font-face{font-family:'Frutiger LT Std';src:url('../fonts/FrutigerLTStd-Light_1.otf') format('opentype');font-weight:300;font-style:normal;font-display:swap}
+@font-face{font-family:'Frutiger LT Arabic';src:url('../fonts/FrutigerLTArabic-55Roman.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap;unicode-range:U+0600-06FF,U+0750-077F,U+08A0-08FF,U+FB50-FDFF,U+FE70-FEFF,U+200C-200F}
+@font-face{font-family:'Frutiger LT Arabic';src:url('../fonts/FrutigerLTStd-Roman_1.otf') format('opentype');font-weight:400;font-style:normal;font-display:swap;unicode-range:U+0000-05FF,U+2000-206F,U+20A0-20CF,U+2100-214F}
+@font-face{font-family:'Frutiger LT Std';src:url('../fonts/FrutigerLTStd-Roman_1.otf') format('opentype');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Frutiger LT Arabic';src:url('../fonts/FrutigerLTArabic-65Bold.ttf') format('truetype');font-weight:700;font-style:normal;font-display:swap;unicode-range:U+0600-06FF,U+0750-077F,U+08A0-08FF,U+FB50-FDFF,U+FE70-FEFF,U+200C-200F}
+@font-face{font-family:'Frutiger LT Arabic';src:url('../fonts/FrutigerLTStd-Bold_1.otf') format('opentype');font-weight:700;font-style:normal;font-display:swap;unicode-range:U+0000-05FF,U+2000-206F,U+20A0-20CF,U+2100-214F}
+@font-face{font-family:'Frutiger LT Std';src:url('../fonts/FrutigerLTStd-Bold_1.otf') format('opentype');font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Frutiger LT Arabic';src:url('../fonts/frutigerltarabic75black.ttf') format('truetype');font-weight:800 900;font-style:normal;font-display:swap;unicode-range:U+0600-06FF,U+0750-077F,U+08A0-08FF,U+FB50-FDFF,U+FE70-FEFF,U+200C-200F}
+/* SF Pro Display — self-hosted from fonts/ (uploaded 2026-10-08). Upright: Regular 400, Medium 500, Bold 700. Italic: 100/200/300/600/800/900. 'SF Pro' and 'SF Pro Text' alias the same files; missing upright weights are synthesised from the nearest cut. */
+@font-face{font-family:'SF Pro Display';src:url('../fonts/SFPRODISPLAYREGULAR.OTF') format('opentype');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'SF Pro Display';src:url('../fonts/SFPRODISPLAYMEDIUM.OTF') format('opentype');font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'SF Pro Display';src:url('../fonts/SFPRODISPLAYBOLD.OTF') format('opentype');font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'SF Pro Display';src:url('../fonts/SFPRODISPLAYULTRALIGHTITALIC.OTF') format('opentype');font-weight:100;font-style:italic;font-display:swap}
+@font-face{font-family:'SF Pro Display';src:url('../fonts/SFPRODISPLAYTHINITALIC.OTF') format('opentype');font-weight:200;font-style:italic;font-display:swap}
+@font-face{font-family:'SF Pro Display';src:url('../fonts/SFPRODISPLAYLIGHTITALIC.OTF') format('opentype');font-weight:300;font-style:italic;font-display:swap}
+@font-face{font-family:'SF Pro Display';src:url('../fonts/SFPRODISPLAYSEMIBOLDITALIC.OTF') format('opentype');font-weight:600;font-style:italic;font-display:swap}
+@font-face{font-family:'SF Pro Display';src:url('../fonts/SFPRODISPLAYHEAVYITALIC.OTF') format('opentype');font-weight:800;font-style:italic;font-display:swap}
+@font-face{font-family:'SF Pro Display';src:url('../fonts/SFPRODISPLAYBLACKITALIC.OTF') format('opentype');font-weight:900;font-style:italic;font-display:swap}
+@font-face{font-family:'SF Pro';src:url('../fonts/SFPRODISPLAYREGULAR.OTF') format('opentype');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'SF Pro';src:url('../fonts/SFPRODISPLAYMEDIUM.OTF') format('opentype');font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'SF Pro';src:url('../fonts/SFPRODISPLAYBOLD.OTF') format('opentype');font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'SF Pro';src:url('../fonts/SFPRODISPLAYULTRALIGHTITALIC.OTF') format('opentype');font-weight:100;font-style:italic;font-display:swap}
+@font-face{font-family:'SF Pro';src:url('../fonts/SFPRODISPLAYTHINITALIC.OTF') format('opentype');font-weight:200;font-style:italic;font-display:swap}
+@font-face{font-family:'SF Pro';src:url('../fonts/SFPRODISPLAYLIGHTITALIC.OTF') format('opentype');font-weight:300;font-style:italic;font-display:swap}
+@font-face{font-family:'SF Pro';src:url('../fonts/SFPRODISPLAYSEMIBOLDITALIC.OTF') format('opentype');font-weight:600;font-style:italic;font-display:swap}
+@font-face{font-family:'SF Pro';src:url('../fonts/SFPRODISPLAYHEAVYITALIC.OTF') format('opentype');font-weight:800;font-style:italic;font-display:swap}
+@font-face{font-family:'SF Pro';src:url('../fonts/SFPRODISPLAYBLACKITALIC.OTF') format('opentype');font-weight:900;font-style:italic;font-display:swap}
+@font-face{font-family:'SF Pro Text';src:url('../fonts/SFPRODISPLAYREGULAR.OTF') format('opentype');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'SF Pro Text';src:url('../fonts/SFPRODISPLAYMEDIUM.OTF') format('opentype');font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'SF Pro Text';src:url('../fonts/SFPRODISPLAYBOLD.OTF') format('opentype');font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'SF Pro Text';src:url('../fonts/SFPRODISPLAYULTRALIGHTITALIC.OTF') format('opentype');font-weight:100;font-style:italic;font-display:swap}
+@font-face{font-family:'SF Pro Text';src:url('../fonts/SFPRODISPLAYTHINITALIC.OTF') format('opentype');font-weight:200;font-style:italic;font-display:swap}
+@font-face{font-family:'SF Pro Text';src:url('../fonts/SFPRODISPLAYLIGHTITALIC.OTF') format('opentype');font-weight:300;font-style:italic;font-display:swap}
+@font-face{font-family:'SF Pro Text';src:url('../fonts/SFPRODISPLAYSEMIBOLDITALIC.OTF') format('opentype');font-weight:600;font-style:italic;font-display:swap}
+@font-face{font-family:'SF Pro Text';src:url('../fonts/SFPRODISPLAYHEAVYITALIC.OTF') format('opentype');font-weight:800;font-style:italic;font-display:swap}
+@font-face{font-family:'SF Pro Text';src:url('../fonts/SFPRODISPLAYBLACKITALIC.OTF') format('opentype');font-weight:900;font-style:italic;font-display:swap}

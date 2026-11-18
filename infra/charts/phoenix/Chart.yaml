@@ -1,0 +1,9 @@
+apiVersion: v2
+name: phoenix
+description: >-
+  Arize Phoenix as stack specification 6.3 describes it: one Deployment carrying the UI,
+  the OTLP collector and the evaluators, with its state in the `phoenix` database on the
+  AWP PostgreSQL cluster. No other services.
+type: application
+version: 0.1.0
+appVersion: "20.20.0"

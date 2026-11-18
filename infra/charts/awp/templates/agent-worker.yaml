@@ -1,0 +1,56 @@
+{{- range .Values.agentWorkers }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-worker-{{ .name }}
+  namespace: {{ $.Values.namespace }}
+  labels:
+    app.kubernetes.io/name: agent-worker
+    awp/task-queue: {{ .queue }}
+    {{- include "awp.labels" $ | nindent 4 }}
+spec:
+  replicas: {{ .replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: agent-worker
+      awp/task-queue: {{ .queue }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: agent-worker
+        awp/task-queue: {{ .queue }}
+        {{- include "awp.labels" $ | nindent 8 }}
+    spec:
+      nodeSelector: {{- toYaml $.Values.nodeSelector | nindent 8 }}
+      securityContext: {{- toYaml $.Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: agent-worker
+          image: {{ include "awp.image" (list $ "agent") }}
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          command: ["python", "-m", "awp_agent.worker", "{{ .queue }}"]
+          securityContext: {{- toYaml $.Values.containerSecurityContext | nindent 12 }}
+          ports: [{ name: health, containerPort: {{ $.Values.agentWorkerHealthPort }} }]
+          env:
+            - { name: AWP_WORKER_HEALTH_PORT, value: {{ $.Values.agentWorkerHealthPort | quote }} }
+            # graphiti-core sends usage telemetry to PostHog by default; egress refuses it (D255).
+            - { name: GRAPHITI_TELEMETRY_ENABLED, value: "false" }
+            {{- include "awp.env" $ | nindent 12 }}
+          envFrom:
+            {{- include "awp.envFrom" $ | nindent 12 }}
+          # `awp_agent.worker` serves this one endpoint, and it answers only while the
+          # Temporal worker is running.
+          # 5 s, as the web pod's (D200): at the default 1 s a busy node timed the probe out
+          # while ingestion worked (D255).
+          livenessProbe:
+            httpGet: { path: /healthz, port: health }
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            timeoutSeconds: 5
+          # Ingestion alone loads docling's CPU inference models (layout, table structure,
+          # OCR) to parse a real document, so it carries its own `resources` where the
+          # shared default is not enough, instead of every worker paying for its headroom.
+          resources: {{- toYaml (.resources | default $.Values.agentWorkerResources) | nindent 12 }}
+          volumeMounts: [{ name: tmp, mountPath: /tmp }]
+      volumes: [{ name: tmp, emptyDir: {} }]
+---
+{{- end }}

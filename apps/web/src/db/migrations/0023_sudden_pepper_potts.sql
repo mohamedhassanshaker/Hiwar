@@ -1,0 +1,2 @@
+ALTER TABLE "work"."transition_step" ADD COLUMN "terminal_outcome" text DEFAULT 'Completed' NOT NULL;--> statement-breakpoint
+ALTER TABLE "work"."transition_step" ADD CONSTRAINT "transition_step_outcome_check" CHECK ("terminal_outcome" in ('Completed', 'Rejected'));

@@ -1,0 +1,227 @@
+# Stack specification 8.6: default deny in every AWP namespace, with the explicit allows
+# the platform needs and nothing else. The one allow that cannot be expressed here, egress
+# to the Kubernetes API server, is in `apiserver-egress.yaml` beside this file.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: default-deny, namespace: awp-app }
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: default-deny, namespace: awp-data }
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: default-deny, namespace: awp-ai }
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: default-deny, namespace: awp-sandbox }
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+# Everything needs DNS.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: allow-dns, namespace: awp-app }
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to: [{ namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: kube-system } } }]
+      ports: [{ protocol: UDP, port: 53 }, { protocol: TCP, port: 53 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: allow-dns, namespace: awp-data }
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to: [{ namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: kube-system } } }]
+      ports: [{ protocol: UDP, port: 53 }, { protocol: TCP, port: 53 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: allow-dns, namespace: awp-ai }
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to: [{ namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: kube-system } } }]
+      ports: [{ protocol: UDP, port: 53 }, { protocol: TCP, port: 53 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: allow-dns, namespace: awp-sandbox }
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to: [{ namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: kube-system } } }]
+      ports: [{ protocol: UDP, port: 53 }, { protocol: TCP, port: 53 }]
+---
+# app → data, ai, its own namespace, and the gateway namespace, which serves the
+# public `*.awp.localtest.me` hosts CoreDNS points the pods at.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: app-to-data-ai-and-gateway, namespace: awp-app }
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector: { matchLabels: { awp/namespace: data } }
+        - namespaceSelector: { matchLabels: { awp/namespace: ai } }
+        - namespaceSelector: { matchLabels: { awp/namespace: system } }
+        - podSelector: {}
+---
+# The console reaches the agent service, and the agent service the console's MCP endpoint;
+# both are pods of awp-app, which default-deny also closes to each other.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: app-internal, namespace: awp-app }
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+  ingress:
+    - from: [{ podSelector: {} }]
+---
+# The egress proxy is the one workload that may leave the cluster, which is what makes it
+# the sandbox namespace's only exit.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: egress-proxy-to-internet, namespace: awp-app }
+spec:
+  podSelector: { matchLabels: { app.kubernetes.io/name: egress-proxy } }
+  policyTypes: [Egress]
+  egress:
+    - to: [{ ipBlock: { cidr: 0.0.0.0/0 } }]
+---
+# ai → data.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: ai-to-data, namespace: awp-ai }
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector: { matchLabels: { awp/namespace: data } }
+        - podSelector: {}
+---
+# agentgateway is the one workload in awp-ai that leaves it: to the platform MCP server in
+# the console, and to the model providers and remote MCP servers outside the cluster. Stack
+# specification 8.6 lists exactly this set.
+#
+# This selects the **data plane**, which is the thing that dials an upstream. The controller
+# names its data plane after the Gateway, so the pod is `ai-gateway`, not `agentgateway`;
+# selecting the controller's own name leaves the proxy under default-deny and every model
+# call times out at connect. Keying on the Gateway API class label instead survives the
+# Gateway being renamed, which is the trap.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: agentgateway-egress, namespace: awp-ai }
+spec:
+  podSelector:
+    matchLabels: { gateway.networking.k8s.io/gateway-class-name: agentgateway }
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector: { matchLabels: { awp/namespace: app } }
+      # 3000 is the console's platform MCP server. 8080 is the deterministic local engine,
+      # which is a provider like any other and so is reached from here, not from the app.
+      # It only exists where `modelEngine.enabled` is true; a port with nothing behind it
+      # grants nothing.
+      ports: [{ protocol: TCP, port: 3000 }, { protocol: TCP, port: 8080 }]
+    - to: [{ ipBlock: { cidr: 0.0.0.0/0 } }]
+---
+# and the console accepts the platform MCP call that comes back through the gateway.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: ai-to-web, namespace: awp-app }
+spec:
+  podSelector: { matchLabels: { app.kubernetes.io/name: web } }
+  policyTypes: [Ingress]
+  ingress:
+    - from: [{ namespaceSelector: { matchLabels: { awp/namespace: ai } } }]
+      ports: [{ protocol: TCP, port: 3000 }]
+---
+# The stores talk to their own replicas and to nothing else outbound.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: data-internal, namespace: awp-data }
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to: [{ podSelector: {} }]
+---
+# The gateway reaches the console; nothing else from outside does.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: gateway-to-web, namespace: awp-app }
+spec:
+  podSelector: { matchLabels: { app.kubernetes.io/name: web } }
+  policyTypes: [Ingress]
+  ingress:
+    - from: [{ namespaceSelector: { matchLabels: { awp/namespace: system } } }]
+      ports: [{ protocol: TCP, port: 3000 }]
+---
+# data and ai accept only what comes from app, ai or their own namespace.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: data-ingress, namespace: awp-data }
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector: { matchLabels: { awp/namespace: app } }
+        - namespaceSelector: { matchLabels: { awp/namespace: ai } }
+        - namespaceSelector: { matchLabels: { awp/namespace: system } }
+        - podSelector: {}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: ai-ingress, namespace: awp-ai }
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector: { matchLabels: { awp/namespace: app } }
+        - namespaceSelector: { matchLabels: { awp/namespace: system } }
+        - podSelector: {}
+---
+# A sandbox may reach the egress proxy and nothing else. Specification section 9.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: sandbox-egress-proxy-only, namespace: awp-sandbox }
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector: { matchLabels: { awp/namespace: app } }
+          podSelector: { matchLabels: { app.kubernetes.io/name: egress-proxy } }
+      ports: [{ protocol: TCP, port: 3128 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: sandbox-manager-to-sandbox, namespace: awp-sandbox }
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector: { matchLabels: { awp/namespace: app } }

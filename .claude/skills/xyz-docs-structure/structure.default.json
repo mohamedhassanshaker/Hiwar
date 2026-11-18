@@ -1,0 +1,89 @@
+{
+  "areas": [
+    {
+      "dir": "00-input-requirements",
+      "title": "Input requirements",
+      "holds": "The business specification (one file) and inbound change requests",
+      "files": [],
+      "folders": [
+        "change-requests"
+      ]
+    },
+    {
+      "dir": "01-product-requirements",
+      "title": "Product requirements",
+      "holds": "Feature specs per module, UI coverage ledgers, glossary, non-functional rules, open questions",
+      "files": [],
+      "folders": [
+        "specs"
+      ]
+    },
+    {
+      "dir": "02-architecture",
+      "title": "Architecture",
+      "holds": "System context, tech stack, solution design",
+      "files": [],
+      "folders": []
+    },
+    {
+      "dir": "03-decisions",
+      "title": "Decisions",
+      "holds": "Decision log and architecture decision records (ADRs)",
+      "files": [],
+      "folders": []
+    },
+    {
+      "dir": "04-api-and-integrations",
+      "title": "APIs and integrations",
+      "holds": "The APIs the system offers and the external systems it uses",
+      "files": [],
+      "folders": []
+    },
+    {
+      "dir": "05-data",
+      "title": "Data",
+      "holds": "Data model, data dictionary, entity relationship diagrams",
+      "files": [],
+      "folders": []
+    },
+    {
+      "dir": "06-security",
+      "title": "Security",
+      "holds": "Identities, trust boundaries, controls, known gaps",
+      "files": [],
+      "folders": []
+    },
+    {
+      "dir": "07-testing",
+      "title": "Testing",
+      "holds": "Test conventions and coverage rules",
+      "files": [],
+      "folders": []
+    },
+    {
+      "dir": "08-devops-and-deployment",
+      "title": "DevOps and deployment",
+      "holds": "Configuration, deployment, runbook",
+      "files": [],
+      "folders": []
+    },
+    {
+      "dir": "09-releases-and-changelog",
+      "title": "Releases and changelog",
+      "holds": "The changelog",
+      "files": [],
+      "folders": []
+    },
+    {
+      "dir": "10-project-management",
+      "title": "Project management",
+      "holds": "Spec backlog and completed specs, task backlog, blockers, progress log",
+      "files": [],
+      "folders": []
+    }
+  ],
+  "root_files": [
+    "README.md",
+    "rules.md"
+  ]
+}

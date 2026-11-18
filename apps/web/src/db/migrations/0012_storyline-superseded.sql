@@ -1,0 +1,2 @@
+ALTER TABLE "ai"."storyline_version" DROP CONSTRAINT "storyline_version_status_check";--> statement-breakpoint
+ALTER TABLE "ai"."storyline_version" ADD CONSTRAINT "storyline_version_status_check" CHECK ("status" in ('Draft', 'Published', 'Superseded'));

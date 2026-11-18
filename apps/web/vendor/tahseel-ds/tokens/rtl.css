@@ -1,0 +1,3 @@
+/* RTL helpers (QA pass 2026-10-08). Directional icons carry data-flip-rtl and mirror inside any dir="rtl" container. Logos, media and numerals are never flipped. */
+[dir="rtl"] [data-flip-rtl]{transform:scaleX(-1)}
+:lang(ar){letter-spacing:0!important;text-transform:none!important}

@@ -1,0 +1,149 @@
+{
+  "docs_root": "docs",
+  "business_spec": "docs/00-input-requirements/Hiwar-UI-Specification.md",
+  "specs_dir": "docs/01-product-requirements/specs",
+  "pm_dir": "docs/10-project-management",
+  "crosscutting_module": "platform",
+  "modules": {
+    "inb": "Conversations inbox, takeover and handback",
+    "agt": "Agents: configuration, testing, versions",
+    "kno": "Knowledge sources and unanswered questions",
+    "dep": "Deployments and the visitor widget",
+    "ana": "Analytics",
+    "bil": "Plan, usage and invoices",
+    "org": "Team, roles, security and audit log",
+    "web": "Public website",
+    "ops": "Operator portal for the Hiwar team",
+    "platform": "Cross-cutting rules, brand, shell, design system, personas, open items"
+  },
+  "id_patterns": [],
+  "docs_structure": {
+    "root": "docs",
+    "areas": [
+      {
+        "dir": "00-input-requirements",
+        "title": "Input requirements",
+        "holds": "The business specification (one file) and inbound change requests",
+        "files": [
+          "business-specification.md"
+        ],
+        "folders": [
+          "change-requests"
+        ]
+      },
+      {
+        "dir": "01-product-requirements",
+        "title": "Product requirements",
+        "holds": "Feature specs per module, UI coverage ledgers, glossary, non-functional rules, open questions",
+        "files": [
+          "glossary.md",
+          "non-functional.md",
+          "open-questions.md"
+        ],
+        "folders": [
+          "specs"
+        ]
+      },
+      {
+        "dir": "02-architecture",
+        "title": "Architecture",
+        "holds": "System context, tech stack, solution design, AI platform, agent runtime, tenancy design",
+        "files": [
+          "overview.md",
+          "tech-stack.md",
+          "solution-design.md"
+        ],
+        "folders": []
+      },
+      {
+        "dir": "03-decisions",
+        "title": "Decisions",
+        "holds": "Decision log, decision registers, architecture decision records (ADRs)",
+        "files": [
+          "decision-log.md",
+          "0000-adr-template.md"
+        ],
+        "folders": []
+      },
+      {
+        "dir": "04-api-and-integrations",
+        "title": "APIs and integrations",
+        "holds": "Platform, tutor and coach APIs; connectors, model providers, identity provider, external systems",
+        "files": [
+          "platform-api.md",
+          "external-systems.md"
+        ],
+        "folders": []
+      },
+      {
+        "dir": "05-data",
+        "title": "Data",
+        "holds": "Data model, data dictionary by domain, entity relationship diagrams",
+        "files": [
+          "data-model.md",
+          "data-dictionary.md"
+        ],
+        "folders": [
+          "data-dictionary",
+          "erd"
+        ]
+      },
+      {
+        "dir": "06-security",
+        "title": "Security",
+        "holds": "Security architecture, identities, tenancy and roles",
+        "files": [
+          "security.md",
+          "tenancy-and-roles.md"
+        ],
+        "folders": []
+      },
+      {
+        "dir": "07-testing",
+        "title": "Testing",
+        "holds": "Acceptance test conventions, isolation coverage",
+        "files": [
+          "acceptance-conventions.md"
+        ],
+        "folders": []
+      },
+      {
+        "dir": "08-devops-and-deployment",
+        "title": "DevOps and deployment",
+        "holds": "Configuration, deployment, runbook",
+        "files": [
+          "configuration.md",
+          "deployment.md",
+          "runbook.md"
+        ],
+        "folders": []
+      },
+      {
+        "dir": "09-releases-and-changelog",
+        "title": "Releases and changelog",
+        "holds": "The changelog",
+        "files": [
+          "CHANGELOG.md"
+        ],
+        "folders": []
+      },
+      {
+        "dir": "10-project-management",
+        "title": "Project management",
+        "holds": "Spec backlog and completed specs, task backlog, blockers, progress log",
+        "files": [
+          "specs-pending.md",
+          "specs-completed.md",
+          "task-backlog.md",
+          "blockers.md",
+          "progress-log.md"
+        ],
+        "folders": []
+      }
+    ],
+    "root_files": [
+      "README.md",
+      "rules.md"
+    ]
+  }
+}

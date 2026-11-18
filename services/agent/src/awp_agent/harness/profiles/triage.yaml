@@ -1,0 +1,13 @@
+# Classifying requests at agentic request entry, and routing them.
+name: triage
+description: Classifies an incoming request and routes it.
+max_steps: 4
+max_tool_calls: 6
+agent_hop_limit: 1
+highest_tier_without_approval: T0
+verify: true
+stream: true
+storyline_mode: Guided
+step_guidance: >
+  Choose the request type, the priority and the owner. When the description is too thin to
+  classify, ask for the one fact that settles it.

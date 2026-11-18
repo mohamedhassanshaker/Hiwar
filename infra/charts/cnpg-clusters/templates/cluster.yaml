@@ -1,0 +1,70 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  instances: {{ .Values.instances }}
+  imageName: {{ .Values.imageName }}
+  # The `db-migrate` Job creates extensions and reassigns schema ownership, which the
+  # application's own role may not do.
+  enableSuperuserAccess: {{ .Values.superuserAccess }}
+  primaryUpdateStrategy: unsupervised
+  storage:
+    size: {{ .Values.storage }}
+  postgresql:
+    # CloudNativePG owns shared_preload_libraries and rejects it as a parameter.
+    shared_preload_libraries: [pg_stat_statements]
+    parameters:
+      max_connections: "200"
+  bootstrap:
+    initdb:
+      database: {{ index .Values.databases 0 }}
+      owner: awp
+      encoding: UTF8
+      localeCollate: en_US.UTF-8
+      localeCType: en_US.UTF-8
+  monitoring:
+    enablePodMonitor: false
+{{- range (rest .Values.databases) }}
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  # A database name may hold an underscore; a resource name may not.
+  name: {{ printf "%s-%s" $.Release.Name (. | replace "_" "-") }}
+  namespace: {{ $.Release.Namespace }}
+spec:
+  name: {{ . }}
+  owner: awp
+  cluster:
+    name: {{ $.Release.Name }}
+{{- $extensions := index $.Values.extensions . }}
+{{- if $extensions }}
+  extensions:
+{{- range $extensions }}
+    - name: {{ . }}
+      ensure: present
+{{- end }}
+{{- end }}
+{{- end }}
+{{- if .Values.pooler }}
+---
+# SD-14 and stack specification 7.1: the application connects through PgBouncer in
+# transaction mode; migrations connect to the primary directly.
+apiVersion: postgresql.cnpg.io/v1
+kind: Pooler
+metadata:
+  name: {{ .Release.Name }}-pooler
+  namespace: {{ .Release.Namespace }}
+spec:
+  cluster:
+    name: {{ .Release.Name }}
+  instances: 1
+  type: rw
+  pgbouncer:
+    poolMode: transaction
+    parameters:
+      max_client_conn: "500"
+      default_pool_size: "25"
+{{- end }}

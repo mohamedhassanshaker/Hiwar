@@ -1,0 +1,10 @@
+[project]
+name = "awp-sandbox-workspace"
+version = "0.1.0"
+description = "The Python libraries skill scripts may import in a sandbox workspace."
+requires-python = "==3.12.*"
+dependencies = [
+    "openpyxl>=3.1",
+    "lxml>=6",
+    "pillow>=13",
+]

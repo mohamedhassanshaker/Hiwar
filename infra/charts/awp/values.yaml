@@ -1,0 +1,170 @@
+# The defaults every environment starts from. `values-local.yaml`, `values-test.yaml` and
+# `values-live.yaml` override what differs.
+
+nameOverride: ""
+namespace: awp-app
+# Where agentgateway's routes are rendered (stack specification 8.3).
+aiNamespace: awp-ai
+
+# Where the images come from. kind uses the local registry the bootstrap started.
+image:
+  registry: localhost:5001
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+# Every workload is pinned by tag; `versions.lock.md` records the digest of each one.
+# `local: true` marks an image this repository builds and pushes to `image.registry`.
+images:
+  web: { repository: awp/web, tag: "0.1.0", local: true }
+  agent: { repository: awp/agent, tag: "0.1.0", local: true }
+  sandboxManager: { repository: awp/sandbox-manager, tag: "0.1.0", local: true }
+  # What a sandbox Pod runs: the interpreters and libraries skill scripts use (D209).
+  sandboxWorkspace: { repository: awp/sandbox-workspace, tag: "0.1.0", local: true }
+  modelEngine: { repository: awp/model-engine, tag: "0.1.0", local: true }
+  connectorRuntime: { repository: awp/connector-runtime, tag: "0.1.0", local: true }
+  egressProxy: { repository: ubuntu/squid, tag: "6.13-25.04_edge" }
+  minioClient: { repository: bitnamilegacy/minio-client, tag: "2025.7.21-debian-12-r2" }
+
+# Stack specification 8.6: application pods run on the app pool, sandboxes on their own.
+nodeSelector:
+  awp/pool: app
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+  seccompProfile: { type: RuntimeDefault }
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities: { drop: ["ALL"] }
+
+# Section 9: every variable arrives as a ConfigMap or a Secret, never baked into an image.
+config:
+  appUrl: https://awp.localtest.me
+  temporalAddress: temporal-frontend.awp-ai.svc.cluster.local:7233
+  temporalNamespace: awp
+  agwLlmUrl: http://ai-gateway.awp-ai.svc.cluster.local:8080
+  agwMcpBaseUrl: http://ai-gateway.awp-ai.svc.cluster.local:8081
+  # The Gateway the rendered routes attach to (infra/gateway/gateway.yaml).
+  aiGatewayName: ai-gateway
+  connectorRuntimeUrl: http://connector-runtime.awp-app.svc.cluster.local:8080
+  phoenixBaseUrl: http://phoenix.awp-ai.svc.cluster.local:6006
+  # Where a browser reaches Phoenix, for the run viewer's trace link. The address above is
+  # in-cluster and resolves nowhere else.
+  phoenixPublicOrigin: https://phoenix.awp.localtest.me
+  otlpEndpoint: http://phoenix.awp-ai.svc.cluster.local:6006/v1/traces
+  neo4jUri: bolt://neo4j.awp-data.svc.cluster.local:7687
+  valkeyUrl: valkey://valkey-primary.awp-data.svc.cluster.local:6379
+  s3Endpoint: http://minio.awp-data.svc.cluster.local:9000
+  s3Region: us-east-1
+  agentServiceUrl: http://agent-service.awp-app.svc.cluster.local:8000
+  platformMcpUrl: http://web.awp-app.svc.cluster.local:3000/api/mcp
+  logLevel: info
+  webauthnRpId: awp.localtest.me
+
+# The Secret `scripts/secrets-from-env.sh` creates in awp-app.
+secretName: awp-app
+
+web:
+  replicas: 1
+  port: 3000
+  resources:
+    requests: { cpu: 200m, memory: 512Mi }
+    limits: { cpu: "1", memory: 1Gi }
+  autoscaling: { enabled: false, minReplicas: 2, maxReplicas: 6, targetCPUUtilizationPercentage: 70 }
+
+agentService:
+  replicas: 1
+  port: 8000
+  resources:
+    requests: { cpu: 200m, memory: 512Mi }
+    limits: { cpu: "1", memory: 1Gi }
+
+# One worker Deployment per Temporal task queue, scaled independently (8.4). A worker may
+# carry its own `resources`, for the one — ingestion — whose CPU inference needs more than
+# the shared default below.
+agentWorkers:
+  - { name: agent-runs, queue: agent-runs, replicas: 1 }
+  - { name: ingestion, queue: ingestion, replicas: 1, resources: { requests: { cpu: 500m, memory: 1Gi }, limits: { cpu: "2", memory: 4Gi } } }
+  - { name: maintenance, queue: maintenance, replicas: 1 }
+
+# The worker serves its health endpoint here; it runs no other HTTP.
+agentWorkerHealthPort: 8010
+
+# The namespace's ResourceQuota requires a request on every container, and an init
+# container that only waits needs almost nothing.
+initResources:
+  requests: { cpu: 50m, memory: 64Mi }
+  limits: { cpu: 200m, memory: 128Mi }
+
+agentWorkerResources:
+  requests: { cpu: 200m, memory: 512Mi }
+  limits: { cpu: "1", memory: 1Gi }
+
+# The deterministic local engine (specification 7.4.8's custom-provider path). Off by
+# default: Test and Live reach real providers. `values-local.yaml` turns it on.
+modelEngine:
+  enabled: false
+  replicas: 1
+  # The port `services/modelstub/Dockerfile` serves on.
+  port: 8080
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits: { cpu: 500m, memory: 256Mi }
+
+sandboxManager:
+  replicas: 1
+  # The port `services/sandbox/Dockerfile` serves on.
+  port: 8080
+  sandboxNamespace: awp-sandbox
+  warmPool: 2
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { cpu: 500m, memory: 512Mi }
+
+connectorRuntime:
+  replicas: 1
+  # The port `services/connectors/Dockerfile` serves on.
+  port: 8080
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { cpu: 500m, memory: 512Mi }
+
+egressProxy:
+  replicas: 1
+  port: 3128
+  # D297: true lets every destination through, the allow-list unread. A developer machine only.
+  allowAll: false
+  allowedDomains:
+    - .tahseel.ae
+    - .anthropic.com
+    - .openai.com
+    # D387: UAE PASS sign-in's token and user-info calls (staging stg-id, production id).
+    - .uaepass.ae
+  resources:
+    requests: { cpu: 100m, memory: 128Mi }
+    limits: { cpu: 500m, memory: 512Mi }
+
+# The namespace's ResourceQuota requires a request on every container, Jobs included.
+jobs:
+  dbMigrate:
+    enabled: true
+    backoffLimit: 3
+    resources:
+      requests: { cpu: 100m, memory: 256Mi }
+      limits: { cpu: "1", memory: 1Gi }
+  objectBuckets:
+    enabled: true
+    buckets: [raw-docs, files, artifacts, attachments, skills, memory, run-payloads, branding]
+    # Versioning is kept on the buckets whose history the product shows (7.3).
+    versioned: [files, artifacts, memory]
+    # Objects removed this many days after they were written. `run-payloads` holds Temporal
+    # payloads too large for the history (D287): a mission can stay open through 20 approval
+    # pauses of 24 hours, and its history is kept 7 days after it closes.
+    expireDays: { run-payloads: 30 }
+    resources:
+      requests: { cpu: 50m, memory: 64Mi }
+      limits: { cpu: 500m, memory: 256Mi }

@@ -1,0 +1,44 @@
+# Elasticsearch off; persistence and visibility on the AWP PostgreSQL cluster (stack
+# specification 6.2 and 8.4). The user and the password come from `awp-pg-temporal`, which
+# `scripts/db-credentials.sh` derives from what CloudNativePG generated for the cluster.
+server:
+  replicaCount: 1
+  config:
+    persistence:
+      default:
+        driver: sql
+        sql:
+          driver: postgres12
+          host: awp-pg-rw.awp-data.svc.cluster.local
+          port: 5432
+          database: temporal
+          user: awp
+          existingSecret: awp-pg-temporal
+      visibility:
+        driver: sql
+        sql:
+          driver: postgres12
+          host: awp-pg-rw.awp-data.svc.cluster.local
+          port: 5432
+          database: temporal_visibility
+          user: awp
+          existingSecret: awp-pg-temporal
+elasticsearch:
+  enabled: false
+prometheus:
+  enabled: false
+grafana:
+  enabled: false
+cassandra:
+  enabled: false
+admintools:
+  # The chart pins 1.29.0, which is not a tag this image publishes; 1.29 is.
+  image:
+    tag: "1.29"
+schema:
+  createDatabase:
+    enabled: false
+web:
+  enabled: true
+  service:
+    type: ClusterIP

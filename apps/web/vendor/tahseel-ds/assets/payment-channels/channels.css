@@ -1,0 +1,23 @@
+/* Payment channel logos — supplied SVGs (70×40) */
+.tahseel-channel-apple-pay{background:url(./apple-pay.svg) center / contain no-repeat}
+.tahseel-channel-bank-cards{background:url(./bank-cards.svg) center / contain no-repeat}
+.tahseel-channel-cheque{background:url(./cheque.svg) center / contain no-repeat}
+.tahseel-channel-direct-debit{background:url(./direct-debit.svg) center / contain no-repeat}
+.tahseel-channel-emirates-id{background:url(./emirates-id.svg) center / contain no-repeat}
+.tahseel-channel-google-pay{background:url(./google-pay.svg) center / contain no-repeat}
+.tahseel-channel-online-receipt{background:url(./online-receipt.svg) center / contain no-repeat}
+.tahseel-channel-passport{background:url(./passport.svg) center / contain no-repeat}
+.tahseel-channel-payflix{background:url(./payflix.svg) center / contain no-repeat}
+.tahseel-channel-payment-link{background:url(./payment-link.svg) center / contain no-repeat}
+.tahseel-channel-pos-mpos{background:url(./pos-mpos.svg) center / contain no-repeat}
+.tahseel-channel-qr-code{background:url(./qr-code.svg) center / contain no-repeat}
+.tahseel-channel-samsung-pay{background:url(./samsung-pay.svg) center / contain no-repeat}
+.tahseel-channel-tahseel-pay{background:url(./tahseel-pay.svg) center / contain no-repeat}
+.tahseel-channel-tahseel-wallet{background:url(./tahseel-wallet.svg) center / contain no-repeat}
+.tahseel-channel-voucher{background:url(./voucher.svg) center / contain no-repeat}
+
+/* Payment Card (CAED) — supplied payment-card.svg, cropped per variant */
+.tahseel-paycard-caed-ar{background:url(./payment-card-caed-ar.svg) center / 100% 100% no-repeat}
+.tahseel-paycard-caed-en{background:url(./payment-card-caed-en.svg) center / 100% 100% no-repeat}
+.tahseel-paycard-caed-ar-active{background:url(./payment-card-caed-ar-active.svg) center / 100% 100% no-repeat}
+.tahseel-paycard-caed-en-active{background:url(./payment-card-caed-en-active.svg) center / 100% 100% no-repeat}

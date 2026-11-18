@@ -1,0 +1,28 @@
+# cert-manager with a self-signed root, which issues the *.awp.localtest.me certificates
+# the gateway serves locally. Test and Live replace this with the organisation CA or ACME.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: awp-selfsigned
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: awp-local-ca
+  namespace: awp-system
+spec:
+  isCA: true
+  commonName: AWP local CA
+  secretName: awp-local-ca
+  privateKey: { algorithm: ECDSA, size: 256 }
+  issuerRef: { name: awp-selfsigned, kind: ClusterIssuer, group: cert-manager.io }
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: awp-local
+spec:
+  ca:
+    secretName: awp-local-ca

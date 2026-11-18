@@ -1,0 +1,99 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: connector-runtime
+  namespace: {{ .Values.namespace }}
+---
+# A stdio connector runs as its own Deployment and Service in this namespace, created by
+# the control process on every save (`services/connectors/src/awp_connectors/pods.py`).
+# Without `apps/deployments` here, a Local MCP connector never comes up and the console
+# only sees the DNS name of a Service that was never created.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: connector-runtime
+  namespace: {{ .Values.namespace }}
+rules:
+  - apiGroups: ["apps"]
+    # `deployments/status` is read while a save waits for the connector's bridge to become
+    # available, so the admin is told it did not start rather than finding out at the
+    # handshake.
+    resources: [deployments, deployments/status]
+    verbs: [get, list, watch, create, patch, delete]
+  - apiGroups: [""]
+    # The ConfigMap is where the set the console last pushed is kept, so a restarted
+    # runtime serves the same connectors instead of none.
+    resources: [services, pods, pods/log, configmaps]
+    verbs: [get, list, watch, create, patch, delete]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: connector-runtime
+  namespace: {{ .Values.namespace }}
+subjects:
+  - { kind: ServiceAccount, name: connector-runtime, namespace: {{ .Values.namespace }} }
+roleRef: { kind: Role, name: connector-runtime, apiGroup: rbac.authorization.k8s.io }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: connector-runtime
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: connector-runtime
+    {{- include "awp.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.connectorRuntime.replicas }}
+  selector:
+    matchLabels: { app.kubernetes.io/name: connector-runtime }
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: connector-runtime
+        {{- include "awp.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: connector-runtime
+      nodeSelector: {{- toYaml .Values.nodeSelector | nindent 8 }}
+      securityContext: {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: connector-runtime
+          image: {{ include "awp.image" (list . "connectorRuntime") }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext: {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          ports: [{ name: http, containerPort: {{ .Values.connectorRuntime.port }} }]
+          env:
+            - { name: SANDBOX_NAMESPACE, value: {{ .Values.sandboxManager.sandboxNamespace | quote }} }
+            # The bridge of every stdio connector is this same image. Left unset it falls
+            # back to a `:dev` tag this chart never builds, and each connector's Pod sits
+            # in ImagePullBackOff while the runtime reports the save as a success.
+            - { name: CONNECTOR_IMAGE, value: {{ include "awp.image" (list . "connectorRuntime") | quote }} }
+            - { name: CONNECTOR_NAMESPACE, value: {{ .Values.namespace | quote }} }
+            - { name: CONNECTOR_IMAGE_PULL_POLICY, value: {{ .Values.image.pullPolicy | quote }} }
+            - { name: EGRESS_PROXY_URL, value: "http://egress-proxy.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.egressProxy.port }}" }
+            # D297: a remote MCP server is reached through the egress proxy, as everything leaving
+            # the cluster is; a stdio connector's bridge is a Service inside it, and the Kubernetes
+            # API is the API server's own address, both reached directly.
+            - { name: HTTP_PROXY, value: "http://egress-proxy.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.egressProxy.port }}" }
+            - { name: HTTPS_PROXY, value: "http://egress-proxy.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.egressProxy.port }}" }
+            - { name: NO_PROXY, value: "localhost,127.0.0.1,.svc,.svc.cluster.local,.cluster.local,$(KUBERNETES_SERVICE_HOST)" }
+            - { name: LOG_LEVEL, value: {{ .Values.config.logLevel | quote }} }
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources: {{- toYaml .Values.connectorRuntime.resources | nindent 12 }}
+          volumeMounts: [{ name: tmp, mountPath: /tmp }]
+      volumes: [{ name: tmp, emptyDir: {} }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: connector-runtime
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: connector-runtime
+    {{- include "awp.labels" . | nindent 4 }}
+spec:
+  selector: { app.kubernetes.io/name: connector-runtime }
+  ports: [{ name: http, port: {{ .Values.connectorRuntime.port }}, targetPort: http }]

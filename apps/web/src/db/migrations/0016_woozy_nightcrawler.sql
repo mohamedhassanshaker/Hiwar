@@ -1,0 +1,2 @@
+ALTER TABLE "gov"."change_set_item" DROP CONSTRAINT "change_set_item_section_check";--> statement-breakpoint
+ALTER TABLE "gov"."change_set_item" ADD CONSTRAINT "change_set_item_section_check" CHECK ("section" in ('OrgUnits', 'Skills', 'Agents', 'RequestTypes', 'Projects', 'Schedules', 'Knowledge', 'Channels', 'Deployments', 'Budgets', 'Settings'));

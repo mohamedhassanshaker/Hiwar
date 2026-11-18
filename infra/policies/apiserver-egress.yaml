@@ -1,0 +1,27 @@
+# The Kubernetes API server is not a Pod in a namespace, and a NetworkPolicy `ipBlock`
+# does not match it: Cilium gives the API server its own identity rather than a CIDR. The
+# operators, the sandbox manager and the connector runtime all need it, so this is the one
+# allow written as a CiliumNetworkPolicy, next to the plain ones that cover everything else.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata: { name: allow-apiserver, namespace: awp-app }
+spec:
+  endpointSelector: {}
+  egress:
+    - toEntities: [kube-apiserver]
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata: { name: allow-apiserver, namespace: awp-data }
+spec:
+  endpointSelector: {}
+  egress:
+    - toEntities: [kube-apiserver]
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata: { name: allow-apiserver, namespace: awp-ai }
+spec:
+  endpointSelector: {}
+  egress:
+    - toEntities: [kube-apiserver]

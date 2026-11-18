@@ -1,0 +1,90 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sandbox-manager
+  namespace: {{ .Values.namespace }}
+---
+# What a sandbox Pod runs as: an identity with no token mounted and no role bound to it.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: awp-sandbox-workspace
+  namespace: {{ .Values.sandboxManager.sandboxNamespace }}
+automountServiceAccountToken: false
+---
+# Requirement 50: namespaced RBAC, limited to pods and jobs in the sandbox namespace.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: sandbox-manager
+  namespace: {{ .Values.sandboxManager.sandboxNamespace }}
+rules:
+  - apiGroups: [""]
+    resources: [pods, pods/log, pods/exec, configmaps]
+    verbs: [get, list, watch, create, delete]
+  - apiGroups: ["batch"]
+    resources: [jobs]
+    verbs: [get, list, watch, create, delete]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: sandbox-manager
+  namespace: {{ .Values.sandboxManager.sandboxNamespace }}
+subjects:
+  - { kind: ServiceAccount, name: sandbox-manager, namespace: {{ .Values.namespace }} }
+roleRef: { kind: Role, name: sandbox-manager, apiGroup: rbac.authorization.k8s.io }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sandbox-manager
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: sandbox-manager
+    {{- include "awp.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.sandboxManager.replicas }}
+  selector:
+    matchLabels: { app.kubernetes.io/name: sandbox-manager }
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: sandbox-manager
+        {{- include "awp.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: sandbox-manager
+      nodeSelector: {{- toYaml .Values.nodeSelector | nindent 8 }}
+      securityContext: {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: sandbox-manager
+          image: {{ include "awp.image" (list . "sandboxManager") }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext: {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          ports: [{ name: http, containerPort: {{ .Values.sandboxManager.port }} }]
+          env:
+            - { name: SANDBOX_NAMESPACE, value: {{ .Values.sandboxManager.sandboxNamespace | quote }} }
+            - { name: SANDBOX_WARM_POOL, value: {{ .Values.sandboxManager.warmPool | quote }} }
+            - { name: SANDBOX_IMAGE, value: {{ include "awp.image" (list . "sandboxWorkspace") | quote }} }
+            - { name: SANDBOX_SERVICE_ACCOUNT, value: awp-sandbox-workspace }
+            - { name: EGRESS_PROXY_URL, value: "http://egress-proxy.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.egressProxy.port }}" }
+            - { name: LOG_LEVEL, value: {{ .Values.config.logLevel | quote }} }
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources: {{- toYaml .Values.sandboxManager.resources | nindent 12 }}
+          volumeMounts: [{ name: tmp, mountPath: /tmp }]
+      volumes: [{ name: tmp, emptyDir: {} }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sandbox-manager
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: sandbox-manager
+    {{- include "awp.labels" . | nindent 4 }}
+spec:
+  selector: { app.kubernetes.io/name: sandbox-manager }
+  ports: [{ name: http, port: {{ .Values.sandboxManager.port }}, targetPort: http }]

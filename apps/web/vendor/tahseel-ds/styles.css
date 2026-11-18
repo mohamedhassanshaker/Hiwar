@@ -1,0 +1,11 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bai+Jamjuree:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import './tokens/fonts.css';
+@import './components/fig-tokens.css';
+@import './tokens/colors.css';
+@import './components/fig-assets.css';
+@import './tokens/fig-typography.css';
+@import './assets/logo.css';
+@import './assets/payment-channels/channels.css';
+@import './assets/rating/rating.css';
+@import './assets/keypad/keypad.css';
+@import './tokens/rtl.css';
