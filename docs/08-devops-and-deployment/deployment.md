@@ -16,11 +16,14 @@ One set of images and one Helm chart (`infra/charts/hiwar`) for three environmen
 Prerequisites: Docker, kind 0.23+, kubectl 1.30+, helm 3.14+, helmfile 1.0+, Node.js 22+, bash (Git Bash on Windows). The Docker daemon needs 4 CPUs and 12 GB for the `core` profile (leaves out Neo4j and Phoenix), 8 CPUs and 20 GB for `full`.
 
 ```bash
-cp .env.example.platform .env.platform     # development values; never put real keys in a committed file
+cp .env.example.platform .env.platform     # then generate the secrets with the commands at its top
 make kind-up PROFILE=core                  # registry, cluster, Cilium, Traefik, cert-manager, CloudNativePG,
                                            # agentgateway, Valkey, MinIO, Temporal, Mailpit, then the hiwar chart
 make seed                                  # AI module seed and the Gulf Bites demo organization
+make test-e2e                              # the Playwright journey in tests/e2e against the cluster
 ```
+
+An antivirus that scans HTTPS (AVG and Avast Web Shield, for example) re-signs the kind API server's certificate on `127.0.0.1`, and kubectl and helm then fail with `x509: certificate signed by unknown authority`. Either exclude the API port from scanning, or run the bootstrap from a container on the Docker VM's network (`docker run --network host` with the Docker socket, the repository, and a kubeconfig from `kind get kubeconfig`), where the traffic never passes the host's scanner.
 
 The platform answers at `https://hiwar.localtest.me:8443` (the local CA from cert-manager signs the certificate). `make deploy` upgrades the chart; `make deploy-web` and `make deploy-agent` rebuild one image and roll it out; `make kind-down` deletes the cluster.
 

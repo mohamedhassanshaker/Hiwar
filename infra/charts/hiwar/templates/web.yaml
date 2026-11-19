@@ -60,6 +60,11 @@ spec:
           ports: [{ name: http, containerPort: {{ .Values.web.port }} }]
           env:
             {{- include "hiwar.env" . | nindent 12 }}
+            {{- if .Values.config.allowPrivateEgress }}
+            # Origin verification may fetch hosts on private addresses (server/deployments.ts).
+            - name: ALLOW_PRIVATE_EGRESS
+              value: "1"
+            {{- end }}
           envFrom:
             {{- include "hiwar.envFrom" . | nindent 12 }}
           # Acceptance 19: readiness is the health endpoint the System screen aggregates. It

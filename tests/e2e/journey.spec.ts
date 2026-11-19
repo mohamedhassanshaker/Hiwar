@@ -7,6 +7,8 @@ import { expect, test, type Browser, type Page } from "@playwright/test";
  */
 test.describe.configure({ mode: "serial" });
 
+const baseUrl = process.env.BASE_URL ?? "http://localhost:3000";
+const mailpit = process.env.MAILPIT_URL ?? "http://localhost:8025";
 const run = Date.now().toString(36);
 const owner = { name: "Noura Test", email: `owner-${run}@e2e.local`, password: "e2e-passphrase-123" };
 const agentEmail = `agent-${run}@e2e.local`;
@@ -15,10 +17,10 @@ let publicKey = "";
 
 async function mailLink(page: Page, to: string, path: string): Promise<string> {
   for (let i = 0; i < 20; i += 1) {
-    const search = await page.request.get(`http://localhost:8025/api/v1/search?query=${encodeURIComponent(`to:${to}`)}`);
+    const search = await page.request.get(`${mailpit}/api/v1/search?query=${encodeURIComponent(`to:${to}`)}`);
     const { messages } = (await search.json()) as { messages: { ID: string }[] };
     if (messages.length) {
-      const message = (await (await page.request.get(`http://localhost:8025/api/v1/message/${messages[0].ID}`)).json()) as { Text: string };
+      const message = (await (await page.request.get(`${mailpit}/api/v1/message/${messages[0].ID}`)).json()) as { Text: string };
       const match = message.Text.match(new RegExp(`http\\S+${path}\\S+`));
       if (match) return match[0];
     }
@@ -91,7 +93,7 @@ test("AC-DEP-001-01, -04, -05, -06: create a deployment, verify the origin, make
   await page.getByRole("button", { name: "Make live" }).click();
   await expect(page.getByText("Verify an allowed origin first.")).toBeVisible();
   await page.getByRole("tab", { name: "Allowed origins" }).click();
-  await page.getByLabel("Add an origin").fill(`http://localhost:3000/demo-site/${publicKey}`);
+  await page.getByLabel("Add an origin").fill(`${baseUrl}/demo-site/${publicKey}`);
   await page.getByRole("button", { name: "Add", exact: true }).click();
   await page.getByRole("button", { name: "Verify" }).click();
   await expect(page.getByText("Verified", { exact: true })).toBeVisible();

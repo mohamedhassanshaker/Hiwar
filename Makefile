@@ -18,7 +18,7 @@ HTTPS_PORT ?= 8443
 export HTTP_PORT
 export HTTPS_PORT
 
-.PHONY: help kind-up kind-down kind-reset deploy deploy-web deploy-agent dev-forward logs seed verify test-e2e test-live versions-lock dev-local dev-local-down
+.PHONY: help kind-up kind-down kind-reset deploy deploy-web deploy-agent dev-forward logs seed verify test-e2e versions-lock dev-local dev-local-down
 
 help: ## Show the targets
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -63,11 +63,8 @@ seed: ## Load the organisation into the cluster database
 verify: ## Run every required check: lint, types, unit, database suites, build (what CI calls)
 	scripts/verify.sh
 
-test-e2e: ## Run the Playwright suite (tests/) against the kind deployment; MODE=fast|normal|full (default normal)
+test-e2e: ## Run the Playwright journey (tests/e2e) against the kind deployment
 	scripts/test-e2e.sh
-
-test-live: ## Run the live missions (they need the agent service) against the kind deployment
-	PROJECT=live scripts/test-e2e.sh
 
 
 versions-lock: ## Refresh the digests in versions.lock.md

@@ -46,6 +46,9 @@ containerSecurityContext:
 # Section 9: every variable arrives as a ConfigMap or a Secret, never baked into an image.
 config:
   appUrl: https://hiwar.localtest.me
+  # Lets deployment origin verification fetch private addresses. Only for a developer machine,
+  # where the customer page is served by this cluster.
+  allowPrivateEgress: false
   temporalAddress: temporal-frontend.hiwar-ai.svc.cluster.local:7233
   temporalNamespace: hiwar
   agwLlmUrl: http://ai-gateway.hiwar-ai.svc.cluster.local:8080

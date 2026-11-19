@@ -42,7 +42,9 @@ version_of() {
     kubectl) kubectl version --client 2>/dev/null ;;
     helm) helm version --short 2>/dev/null ;;
     helmfile) helmfile version 2>/dev/null ;;
-  esac | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1
+  esac | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sed -n 1p
+  # `sed -n 1p` reads to the end: `head -1` closes the pipe early, and under pipefail the
+  # SIGPIPE that grep then gets ends the script when a tool prints several versions.
 }
 
 # True when $1 is at least $2, comparing the three parts numerically.

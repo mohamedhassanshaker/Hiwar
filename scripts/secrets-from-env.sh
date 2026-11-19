@@ -7,7 +7,7 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 env_file="${ENV_FILE:-${root}/.env}"
 
 if [ ! -f "${env_file}" ]; then
-  echo "No ${env_file}. Copy .env.example to .env and fill it in." >&2
+  echo "No ${env_file}. Copy .env.example.platform to .env.platform and fill it in." >&2
   exit 1
 fi
 

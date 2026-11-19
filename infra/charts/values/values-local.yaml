@@ -9,6 +9,8 @@ config:
   appUrl: https://hiwar.localtest.me
   webauthnRpId: hiwar.localtest.me
   logLevel: debug
+  # The demo customer page is served by this cluster, at a private address.
+  allowPrivateEgress: true
   # Traces go to Phoenix, the chart default. With ../cluster-monitoring/install.sh run, set
   # otlpEndpoint: http://otel-gateway.monitoring.svc.cluster.local:4318/v1/traces to add OpenSearch.
 

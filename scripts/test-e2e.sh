@@ -1,21 +1,20 @@
 #!/usr/bin/env bash
-# `make test-e2e`: the Playwright suite in `tests/` (run from that folder) against the kind deployment.
+# `make test-e2e`: the Playwright journey in `tests/e2e` against the kind deployment.
 #
-# The suite needs only BASE_URL, the address the console is served on. It reads no database:
-# every check goes through the console, so nothing here opens a port-forward.
-#
-# `MODE=fast|normal|full` picks the run mode of tests/AGENTS.md section 3 (default `normal`; the gate is `full`).
-# `GREP=...` runs one case or one file, which is how a single scenario is checked without
-# running the whole suite. `PROJECT=live` runs the live missions (they need the agent service) instead of a mode.
-# Other arguments go to Playwright.
+# The suite goes through the console at BASE_URL and reads the verification and invitation
+# emails from Mailpit, which it reaches through a port-forward. Arguments go to Playwright,
+# so `scripts/test-e2e.sh --grep AC-DEP` runs one case.
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-base_url="$("${root}/scripts/public-origin.sh" https hiwar.localtest.me)"
+mail_port="${MAIL_LOCAL_PORT:-58025}"
 
-cd "${root}/tests"
-if [[ -n "${PROJECT:-}" ]]; then
-  BASE_URL="${base_url}" npx playwright test --project="${PROJECT}" ${GREP:+--grep "${GREP}"} "$@"
-else
-  BASE_URL="${base_url}" npm run "test:${MODE:-normal}" -- ${GREP:+--grep "${GREP}"} "$@"
-fi
+# shellcheck source=scripts/port-forward.sh
+. "${root}/scripts/port-forward.sh"
+trap forward_stop EXIT
+forward_start hiwar-app svc/mailpit "${mail_port}" 8025
+
+cd "${root}"
+BASE_URL="$("${root}/scripts/public-origin.sh" https hiwar.localtest.me)" \
+MAILPIT_URL="http://127.0.0.1:${mail_port}" \
+  npx playwright test "$@"
