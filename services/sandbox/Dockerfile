@@ -10,7 +10,7 @@ ENV PYTHONUNBUFFERED=1 \
     PATH=/opt/venv/bin:$PATH
 
 COPY --from=ghcr.io/astral-sh/uv:0.12.9 /uv /usr/local/bin/uv
-RUN groupadd --gid 10001 awp && useradd --uid 10001 --gid awp --no-create-home awp
+RUN groupadd --gid 10001 hiwar && useradd --uid 10001 --gid hiwar --no-create-home hiwar
 WORKDIR /app
 
 FROM base AS dependencies
@@ -23,8 +23,8 @@ COPY pyproject.toml uv.lock README.md ./
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --no-install-project
 COPY src ./src
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen
-RUN chown -R awp:awp /app
-USER awp
+RUN chown -R hiwar:hiwar /app
+USER hiwar
 EXPOSE 8080
 CMD ["uvicorn", "awp_sandbox.main:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]
 
@@ -34,7 +34,7 @@ COPY pyproject.toml uv.lock README.md ./
 COPY src ./src
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --no-dev
 
-USER awp
+USER hiwar
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
     CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=2).status == 200 else 1)"

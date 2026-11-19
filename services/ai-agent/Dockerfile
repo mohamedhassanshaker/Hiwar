@@ -21,7 +21,7 @@ RUN apt-get update \
         tesseract-ocr tesseract-ocr-ara tesseract-ocr-eng \
     && rm -rf /var/lib/apt/lists/*
 
-RUN groupadd --gid 10001 awp && useradd --uid 10001 --gid awp --no-create-home awp
+RUN groupadd --gid 10001 hiwar && useradd --uid 10001 --gid hiwar --no-create-home hiwar
 WORKDIR /app
 
 # The lock file alone, so a source change does not reinstall the world.
@@ -59,7 +59,7 @@ COPY services/ai-agent/src ./src
 COPY packages/skills-bundled ./skills
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --extra parsers
 RUN chown -R hiwar:hiwar /app
-USER awp
+USER hiwar
 EXPOSE 8000
 CMD ["uvicorn", "awp_agent.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
@@ -72,7 +72,7 @@ COPY services/ai-agent/src ./src
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --no-dev --extra parsers
 COPY --chown=hiwar:hiwar packages/skills-bundled ./skills
 
-USER awp
+USER hiwar
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=20s \
     CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=2).status == 200 else 1)"
