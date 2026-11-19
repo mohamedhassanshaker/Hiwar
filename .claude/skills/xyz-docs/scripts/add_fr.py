@@ -3,7 +3,7 @@
 
   add_fr.py FEATURE-ID "System MUST ... [UI:Screen]"   prints `FEATURE-ID FR-nnn`
 """
-import sys, re, os, glob, fcntl
+import sys, re, os, glob
 
 import xyz_config
 
@@ -14,8 +14,7 @@ def main(fid, text):
     path = next((f for f in glob.glob(SPECS + '/**/spec.md', recursive=True) if re.search(r'^\*\*Feature ID\*\*: ' + re.escape(fid) + r'$', open(f, encoding='utf-8').read(), re.M)), None)
     if not path: sys.exit(f'unknown feature {fid}')
     if not re.match(r'^(System|Users?|[A-Z][a-z]+) (MUST|MAY|SHOULD)\b', text): sys.exit('text must start with a subject and MUST/MAY/SHOULD')
-    with open(path, 'r+', encoding='utf-8') as fh:
-        fcntl.flock(fh, fcntl.LOCK_EX)
+    with open(path, 'r+', encoding='utf-8', newline='') as fh, xyz_config.locked(fh):
         lines = fh.read().split('\n')
         start = next(i for i, l in enumerate(lines) if l.startswith('### Functional Requirements'))
         end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith(('### ', '## '))), len(lines))

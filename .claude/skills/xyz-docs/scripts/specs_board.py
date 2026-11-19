@@ -5,6 +5,7 @@
   specs_board.py sync                           add specs missing from both files to the backlog, report rows whose spec is gone
   specs_board.py complete ID [ID...] --evidence "..."   move specs from the backlog to specs-completed.md
   specs_board.py reopen ID [ID...]              move specs from specs-completed.md back to the backlog
+  specs_board.py evidence ID [ID...] --evidence "..."   replace the date and evidence of completed specs
   specs_board.py check                          every spec is in exactly one file; every row has a spec
 """
 import re, sys, os, glob, datetime
@@ -18,7 +19,7 @@ PM = CFG['pm_dir_abs']
 BACKLOG, DONE, TASKS = (os.path.join(PM, n) for n in ('specs-pending.md', 'specs-completed.md', 'task-backlog.md'))
 RELSPECS = os.path.relpath(SPECS, PM).replace(os.sep, '/')
 MARK = ('<!-- rows:start -->', '<!-- rows:end -->')
-BACKLOG_HEAD = '| ID | Feature | Module | Screens | FRs | Implementation hint |\n| --- | --- | --- | --- | --- | --- |'
+BACKLOG_HEAD = '| ID | Feature | Module | Screens | FRs | Change requests | Implementation hint |\n| --- | --- | --- | --- | --- | --- | --- |'
 DONE_HEAD = '| ID | Feature | Module | Completed | Evidence |\n| --- | --- | --- | --- | --- |'
 
 
@@ -30,9 +31,10 @@ def specs():
         rel = os.path.relpath(f, SPECS)
         out[fid] = dict(
             title=re.match(r'# Feature Specification: (.*)', t).group(1).strip(),
-            module=rel.split(os.sep)[0].upper() if not rel.startswith('aic' + os.sep) else 'AIC',
+            module=rel.split(os.sep)[0].upper(),
             screens=(re.search(r'\*\*Screens\*\*: (.*)', t) or [None, ''])[1].strip(),
             frs=len(re.findall(r'^- \*\*FR-\d+\*\*', t, re.M)),
+            crs=', '.join(sorted(set(re.findall(r'`(CR-\d{3}):', t)))),
             path=rel.replace(os.sep, '/'))
     return out
 
@@ -74,11 +76,11 @@ def write_rows(path, rows, head):
     body = head + '\n' + '\n'.join(rows[k] for k in sorted(rows, key=lambda k: (k.split('-')[0], k)))
     t = t[:a] + MARK[0] + '\n\n' + body + '\n\n' + t[b:]
     t = re.sub(r'last-updated: \S+', 'last-updated: ' + datetime.date.today().isoformat(), t, count=1)
-    open(path, 'w', encoding='utf-8').write(t)
+    xyz_config.write(path, t)
 
 
 def backlog_row(fid, sp, st):
-    return f"| {fid} | {link(fid, sp)} | {sp['module']} | {sp['screens']} | {sp['frs']} | {hint(sp, st)} |"
+    return f"| {fid} | {link(fid, sp)} | {sp['module']} | {sp['screens']} | {sp['frs']} | {sp['crs']} | {hint(sp, st)} |"
 
 
 def header(title, intro):
@@ -108,10 +110,10 @@ last-updated: {datetime.date.today().isoformat()}
 def init(force):
     sp, st = specs(), task_status()
     if (os.path.exists(BACKLOG) or os.path.exists(DONE)) and not force: sys.exit('specs-pending.md or specs-completed.md exists (use --force)')
-    open(BACKLOG, 'w', encoding='utf-8').write(header('Spec backlog', """Feature specs ([specs](SPECS_README)) that are not yet built and accepted. A spec leaves this list only through `specs_board.py complete`, which moves its row to [completed specs](specs-completed.md). Implementation task status is in [task-backlog.md](task-backlog.md), blockers in [blockers.md](blockers.md).
+    xyz_config.write(BACKLOG, header('Spec backlog', """Feature specs ([specs](SPECS_README)) that are not yet built and accepted. A spec leaves this list only through `specs_board.py complete`, which moves its row to [completed specs](specs-completed.md). Implementation task status is in [task-backlog.md](task-backlog.md), blockers in [blockers.md](blockers.md).
 
 The hint column shows the status of the spec's screens in the task backlog. It does not mean the spec is complete: a spec is complete only when every requirement and acceptance scenario in it is implemented and its tests pass."""))
-    open(DONE, 'w', encoding='utf-8').write(header('Completed specs', """Feature specs whose requirements and acceptance scenarios are all implemented, with the evidence (tests, deployment) that shows it. Rows come from [specs-pending.md](specs-pending.md) through `specs_board.py complete`; `reopen` returns a row when its spec gains requirements that are not built."""))
+    xyz_config.write(DONE, header('Completed specs', """Feature specs whose requirements and acceptance scenarios are all implemented, with the evidence (tests, deployment) that shows it. Rows come from [specs-pending.md](specs-pending.md) through `specs_board.py complete`; `reopen` returns a row when its spec gains requirements that are not built."""))
     write_rows(BACKLOG, {k: backlog_row(k, v, st) for k, v in sp.items()}, BACKLOG_HEAD)
     write_rows(DONE, {}, DONE_HEAD)
     print(f'backlog: {len(sp)} specs pending, completed: 0')
@@ -150,6 +152,16 @@ def reopen(ids):
     print(f'reopened {", ".join(ids)}')
 
 
+def evidence(ids, text):
+    sp = specs(); d = read_rows(DONE)
+    for i in ids:
+        if i not in d: sys.exit(f'{i} is not in completed specs')
+        s = sp[i]
+        d[i] = f"| {i} | {link(i, s)} | {s['module']} | {datetime.date.today().isoformat()} | {text} |"
+    write_rows(DONE, d, DONE_HEAD)
+    print(f'evidence updated for {", ".join(ids)}')
+
+
 def check():
     sp = specs(); b, d = read_rows(BACKLOG), read_rows(DONE)
     bad = [f'{k} in both files' for k in b if k in d] + [f'{k} in no file' for k in sp if k not in b and k not in d] + [f'{k} has no spec' for k in list(b) + list(d) if k not in sp]
@@ -166,6 +178,9 @@ if __name__ == '__main__':
     elif cmd == 'complete':
         if '--evidence' not in a: sys.exit('--evidence is required')
         e = a.index('--evidence'); complete([x for x in a[1:e]], ' '.join(a[e + 1:]))
+    elif cmd == 'evidence' and '--evidence' not in a: sys.exit('--evidence is required')
+    elif cmd == 'evidence':
+        e = a.index('--evidence'); evidence(a[1:e], ' '.join(a[e + 1:]))
     elif cmd == 'reopen': reopen(a[1:])
     elif cmd == 'check': sys.exit(check())
     else: print(__doc__)

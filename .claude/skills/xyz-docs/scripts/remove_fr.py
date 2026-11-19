@@ -42,13 +42,13 @@ def main(fid, fr, to):
         if pre and pre.strip() != fid: return m.group(0)
         return f'{pre}FR-{remap(k):03d}'
     text = re.sub(r'((?:[A-Z]{2,3}-\d{3} )?)(\*\*)?FR-(\d+)', lambda m: (m.group(1) or '') + ('**' if m.group(2) else '') + (f'FR-{remap(int(m.group(3))):03d}' if (not m.group(1) or m.group(1).strip() == fid) else f'FR-{m.group(3)}'), text)
-    open(spec, 'w', encoding='utf-8').write(text)
+    xyz_config.write(spec, text)
     pat = re.compile(re.escape(fid) + r' FR-(\d+)')
     for f in files:
         if f == spec: continue
         t = open(f, encoding='utf-8').read()
         t2 = pat.sub(lambda m: f'{fid} FR-{remap(int(m.group(1))):03d}', t)
-        if t2 != t: open(f, 'w', encoding='utf-8').write(t2)
+        if t2 != t: xyz_config.write(f, t2)
     print(f'removed {fid} {fr}')
 
 

@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """UI coverage of design artboards (*.dc.html) by feature specs, through per-screen ledgers.
 
-  ui_coverage.py extract ARTBOARD_DIR [Screen]   print the UI items found in the artboards (JSON)
-  ui_coverage.py verify ARTBOARD_DIR              exit 1 unless every UI item has a ledger row that resolves to a spec requirement
+  ui_coverage.py extract [BOARDS [Screen]]   print the UI items found in the artboards (JSON)
+  ui_coverage.py verify [BOARDS]             exit 1 unless every UI item has a ledger row that resolves to a spec requirement
+
+BOARDS is a folder or a .zip holding `*.dc.html` artboards (zip members are read in memory, not extracted);
+default: design_boards in .claude/xyz.json.
 
 Ledger: <specs_dir>/ui-coverage/<Screen>.md, rows `| UI function | Kind | Covered by |`.
 Covered by: `<FEATURE-ID> FR-nnn` or `<FEATURE-ID> AC-...` (must exist), or `n/a: <sample data|layout|decoration|prototype state|duplicate of ...|removed from scope>`.
 """
-import re, sys, os, glob, json, html
+import re, sys, os, glob, json, html, zipfile
 
 import xyz_config
 
@@ -28,8 +31,7 @@ def norm(s):
     return re.sub(r'\s+', ' ', re.sub(r'[`*]', '', s)).strip().lower()
 
 
-def extract(path):
-    t = open(path, encoding='utf-8').read()
+def extract(t):
     parts = t.split('</x-dc>')
     tpl = re.sub(r'<style.*?</style>', '', parts[0], flags=re.S)
     scr = parts[1] if len(parts) > 1 else ''
@@ -56,7 +58,11 @@ def extract(path):
 
 
 def artboards(d):
-    return {os.path.basename(f)[:-8]: f for f in sorted(glob.glob(os.path.join(d, '*.dc.html')))}
+    """Screen name -> artboard text, from a folder or a zip."""
+    if zipfile.is_zipfile(d):
+        with zipfile.ZipFile(d) as z:
+            return {os.path.basename(n)[:-8]: z.read(n).decode('utf-8') for n in sorted(z.namelist()) if n.endswith('.dc.html')}
+    return {os.path.basename(f)[:-8]: open(f, encoding='utf-8').read() for f in sorted(glob.glob(os.path.join(d, '*.dc.html')))}
 
 
 def spec_index():
@@ -74,8 +80,8 @@ def verify(d):
     ids = spec_index()
     problems = []
     rows_total = 0
-    for name, f in ab.items():
-        items = extract(f)
+    for name, t in ab.items():
+        items = extract(t)
         if not items: continue
         lp = os.path.join(LEDGERS, name + '.md')
         if not os.path.exists(lp):
@@ -105,11 +111,13 @@ def verify(d):
 
 if __name__ == '__main__':
     cmd = sys.argv[1] if len(sys.argv) > 1 else ''
+    src = sys.argv[2] if len(sys.argv) > 2 else (CFG.get('design_boards') and os.path.join(ROOT, CFG['design_boards']))
+    if cmd in ('extract', 'verify') and not src: sys.exit('give BOARDS or set design_boards in .claude/xyz.json')
     if cmd == 'extract':
-        ab = artboards(sys.argv[2])
+        ab = artboards(src)
         sel = sys.argv[3] if len(sys.argv) > 3 else None
-        print(json.dumps({n: extract(f) for n, f in ab.items() if not sel or n == sel}, indent=1, ensure_ascii=False))
+        print(json.dumps({n: extract(t) for n, t in ab.items() if not sel or n == sel}, indent=1, ensure_ascii=False))
     elif cmd == 'verify':
-        sys.exit(verify(sys.argv[2]))
+        sys.exit(verify(src))
     else:
         print(__doc__)

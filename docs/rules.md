@@ -81,11 +81,11 @@ last-updated: <YYYY-MM-DD>
 ## 6. Requirements and specs
 
 1. Requirement IDs (`BR-`, `BL-`, `SR-`, `AC-`, `IX-`, `SM-`, `PR-`, `LR-`, `FO-`, `P-`, `D-`, `G-`) are cited by code and tests. Do not renumber or reuse one. Delete a rule only when nothing cites it.
-2. A requirement change starts in the business specification. Then update the feature specs and run the coverage check; it must print `0 problems`.
+2. A requirement change is a change request in `00-input-requirements/change-requests` (`CR-NNN-slug.md`), applied with `cr.py apply` of the `xyz-docs` skill. Then the coverage checks must print `0 problems`.
 3. Every feature spec lists its source sections, carries the source IDs, and follows the spec template. Open points are `[NEEDS CLARIFICATION: ...]` with the open item ID; a decided point is a requirement.
 4. Design conflicts are recorded as `[NEEDS CLARIFICATION: design shows X; specification says Y]` until the product owner decides. Never choose silently.
 5. Every function of every design screen is a row in its UI coverage ledger that cites a spec requirement, or is marked as not a product function.
-6. Use the scripts of the `xyz-feature-specs` skill to add or remove requirements so numbering and references stay consistent.
+6. Use the scripts of the `xyz-docs` skill (`add_fr.py`, `remove_fr.py`) to add or remove requirements so numbering and references stay consistent.
 7. Whether a spec is pending or completed is recorded only in `10-project-management/specs-pending.md` and `specs-completed.md`, changed through `specs_board.py`. A completed spec needs evidence. Adding requirements to a completed spec reopens it.
 
 ## 7. Decisions
@@ -113,7 +113,8 @@ Run before delivering a documentation change:
 
 | Check | Command | Passes when |
 | --- | --- | --- |
-| Structure and links | `python3 .claude/skills/xyz-docs-structure/scripts/docs_structure.py check` | `0 problems` |
-| Requirements coverage | `python3 .claude/skills/xyz-feature-specs/scripts/coverage.py verify` | `0 problems` |
-| Spec structure | `python3 .claude/skills/xyz-feature-specs/scripts/coverage.py lint` | `0 problems` |
-| Spec board | `python3 .claude/skills/xyz-spec-backlog/scripts/specs_board.py check` | `0 problems` |
+| Structure and links | `python .claude/skills/xyz-docs/scripts/docs_structure.py check` | `0 problems` |
+| Requirements coverage | `python .claude/skills/xyz-docs/scripts/coverage.py verify` | `0 problems` |
+| Spec structure | `python .claude/skills/xyz-docs/scripts/coverage.py lint` | `0 problems` |
+| Spec board | `python .claude/skills/xyz-docs/scripts/specs_board.py check` | `0 problems` |
+| Change requests | `python .claude/skills/xyz-docs/scripts/cr.py check` | `0 problems` |

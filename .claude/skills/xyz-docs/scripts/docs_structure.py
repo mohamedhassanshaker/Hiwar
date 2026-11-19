@@ -53,7 +53,7 @@ def rules():
     t = open(RULES_TEMPLATE, encoding='utf-8').read()
     area_list = ', '.join(f"`{a['dir']}`" for a in S['areas'])
     rows = '\n'.join(['| Area | Holds |', '| --- | --- |'] + [f"| {a['dir']} | {a['holds']} |" for a in S['areas']])
-    for k, v in (('{{AREA_LIST}}', area_list), ('{{AREAS_TABLE}}', rows), ('{{BUSINESS_SPEC}}', CFG['business_spec']), ('{{SPECS_DIR}}', CFG['specs_dir']), ('{{PM_DIR}}', CFG['pm_dir']), ('{{TODAY}}', datetime.date.today().isoformat())):
+    for k, v in (('{{AREA_LIST}}', area_list), ('{{AREAS_TABLE}}', rows), ('{{SOURCES}}', ', '.join(f"`{s['path']}` ({s['kind']})" for s in CFG['sources'])), ('{{FIRST_SOURCE}}', os.path.relpath(CFG['sources'][0]['abs'], DOCS).replace(os.sep, '/')), ('{{SPECS_DIR}}', CFG['specs_dir']), ('{{PM_DIR}}', CFG['pm_dir']), ('{{TODAY}}', datetime.date.today().isoformat())):
         t = t.replace(k, v)
     return t
 
@@ -68,7 +68,7 @@ def init():
     for name, content in (('README.md', readme()), ('rules.md', rules())):
         p = os.path.join(DOCS, name)
         if content is not None and not os.path.exists(p):
-            open(p, 'w', encoding='utf-8').write(content); made.append(os.path.relpath(p, ROOT))
+            xyz_config.write(p, content); made.append(os.path.relpath(p, ROOT))
     print('created: ' + (', '.join(made) if made else 'nothing (structure already in place)'))
 
 
@@ -76,7 +76,7 @@ def index():
     p = os.path.join(DOCS, 'README.md')
     t = open(p, encoding='utf-8').read()
     t = re.sub(re.escape(M[0]) + '.*' + re.escape(M[1]), lambda m: f'{M[0]}\n\n{table()}\n\n{M[1]}', t, flags=re.S)
-    open(p, 'w', encoding='utf-8').write(t)
+    xyz_config.write(p, t)
     print('index updated')
 
 

@@ -2,7 +2,7 @@
 title: Documentation rules
 status: approved
 owner: Product owner
-related: [README.md, {{BUSINESS_SPEC}}]
+related: [README.md, {{FIRST_SOURCE}}]
 version: 1.0
 last-updated: {{TODAY}}
 ---
@@ -23,8 +23,8 @@ How the documents in `docs/` are organised, written and kept current. [README.md
 
 ## 2. Authority
 
-1. The business specification (`{{BUSINESS_SPEC}}`) is the source of business requirements. The feature specs in `{{SPECS_DIR}}` are derived from it and must cover all of it.
-2. When two documents disagree, the one higher in this list wins: business specification, feature specs, architecture and decisions, everything else. Fix the lower document in the same change.
+1. The requirement sources ({{SOURCES}}) are the source of requirements. The feature specs in `{{SPECS_DIR}}` are derived from the business and UI sources and must cover all of them; the documents in the architecture areas are derived from the feature specs and the technical sources and must cover all of them.
+2. When two documents disagree, the one higher in this list wins: requirement sources, feature specs, architecture and decisions, everything else. Fix the lower document in the same change.
 3. A document that describes the code states the date it was last checked against the code. The code is the truth for how things work today; a document is the truth for what is required.
 
 ## 3. Files and names
@@ -61,18 +61,18 @@ last-updated: <YYYY-MM-DD>
 4. Use tables for attributes, states, roles and values; bullets for rules; numbered lists only for ordered steps or numbered rules. Number only what is referenced by number.
 5. Numbers carry units and, for money, the currency and whether VAT is included. Values that are configured and not fixed are described as configured.
 6. Explain a term the first time it appears, or link to the glossary.
-7. Refer to roles, screens, modules and IDs exactly as the business specification names them.
+7. Refer to roles, screens, modules and IDs exactly as the requirement sources name them.
 8. Write paths, commands, identifiers and file names in backticks.
 9. No secrets, credentials, personal data or private customer data in any document.
 
 ## 6. Requirements and specs
 
-1. Requirement and decision IDs defined in the business specification are cited by code and tests. Do not renumber or reuse one. Delete a rule only when nothing cites it.
-2. A requirement change starts in the business specification. Then update the feature specs and run the coverage check; it must print `0 problems`.
+1. Requirement and decision IDs defined in the requirement sources are cited by code and tests. Do not renumber or reuse one. Delete a rule only when nothing cites it.
+2. A requirement change is a change request in `00-input-requirements/change-requests` (`CR-NNN-slug.md`), applied with `cr.py apply` of the `xyz-docs` skill. Then update the feature specs and run the coverage check; it must print `0 problems`.
 3. Every feature spec lists its source sections, carries the source IDs, and follows the spec template. Open points are `[NEEDS CLARIFICATION: ...]` with the open item ID; a decided point is a requirement.
 4. Design conflicts are recorded as `[NEEDS CLARIFICATION: design shows X; specification says Y]` until the product owner decides. Never choose silently.
 5. Every function of every design screen is a row in its UI coverage ledger that cites a spec requirement, or is marked as not a product function.
-6. Use the scripts of the `xyz-feature-specs` skill to add or remove requirements so numbering and references stay consistent.
+6. Use the scripts of the `xyz-docs` skill (`add_fr.py`, `remove_fr.py`) to add or remove requirements so numbering and references stay consistent.
 7. Whether a spec is pending or completed is recorded only in `{{PM_DIR}}/specs-pending.md` and `specs-completed.md`, changed through `specs_board.py`. A completed spec needs evidence. Adding requirements to a completed spec reopens it.
 
 ## 7. Decisions
@@ -100,7 +100,10 @@ Run before delivering a documentation change:
 
 | Check | Command | Passes when |
 | --- | --- | --- |
-| Structure and links | `python3 .claude/skills/xyz-docs-structure/scripts/docs_structure.py check` | `0 problems` |
-| Requirements coverage | `python3 .claude/skills/xyz-feature-specs/scripts/coverage.py verify` | `0 problems` |
-| Spec structure | `python3 .claude/skills/xyz-feature-specs/scripts/coverage.py lint` | `0 problems` |
-| Spec board | `python3 .claude/skills/xyz-spec-backlog/scripts/specs_board.py check` | `0 problems` |
+| Structure and links | `python .claude/skills/xyz-docs/scripts/docs_structure.py check` | `0 problems` |
+| Requirements coverage | `python .claude/skills/xyz-docs/scripts/coverage.py verify` | `0 problems` |
+| Spec structure | `python .claude/skills/xyz-docs/scripts/coverage.py lint` | `0 problems` |
+| Architecture trace | `python .claude/skills/xyz-docs/scripts/coverage.py trace` | `0 problems` |
+| Design coverage | `python .claude/skills/xyz-docs/scripts/ui_coverage.py verify` | `0 problems` |
+| Spec board | `python .claude/skills/xyz-docs/scripts/specs_board.py check` | `0 problems` |
+| Change requests | `python .claude/skills/xyz-docs/scripts/cr.py check` | `0 problems` |

@@ -1,6 +1,31 @@
 {
   "docs_root": "docs",
-  "business_spec": "docs/00-input-requirements/Hiwar-UI-Specification.md",
+  "requirement_sources": [
+    {
+      "path": "docs/00-input-requirements/Hiwar-UI-Specification.md",
+      "kind": "ui",
+      "prefix": ""
+    },
+    {
+      "path": "docs/00-input-requirements/tech-stack.md",
+      "kind": "technical",
+      "prefix": "tech"
+    }
+  ],
+  "design_boards": "docs/00-input-requirements/Hiwar-claude-code-handoff.zip",
+  "e2e": {
+    "test_dir": "tests/e2e",
+    "run": "bash scripts/test-e2e.sh"
+  },
+  "implement": {
+    "verify": "make verify",
+    "deploy": {
+      "apps/web": "make deploy-web",
+      "packages/": "make deploy-web && make deploy-agent",
+      "services/ai-agent": "make deploy-agent",
+      "*": "make deploy"
+    }
+  },
   "specs_dir": "docs/01-product-requirements/specs",
   "pm_dir": "docs/10-project-management",
   "crosscutting_module": "platform",
@@ -23,7 +48,7 @@
       {
         "dir": "00-input-requirements",
         "title": "Input requirements",
-        "holds": "The business specification (one file) and inbound change requests",
+        "holds": "Requirement sources (business, UI, technical), design and reference archives, change requests",
         "files": [
           "business-specification.md"
         ],
