@@ -1,3 +1,0 @@
-ALTER TABLE "ai"."model_provider" ADD COLUMN "gateway_provider" text DEFAULT 'Custom' NOT NULL;--> statement-breakpoint
-ALTER TABLE "ai"."model_provider" ADD CONSTRAINT "model_provider_gateway_check" CHECK ("gateway_provider" in ('Anthropic', 'Azure', 'Baseten', 'Bedrock', 'Cerebras', 'Cohere', 'Custom', 'Deepinfra', 'Deepseek', 'Fireworks', 'Gemini', 'Groq', 'Huggingface', 'Meta', 'Mistral', 'Ollama', 'OpenAI', 'Openrouter', 'TogetherAI', 'VertexAI', 'XAI'));--> statement-breakpoint
-ALTER TABLE "ai"."model_provider" ADD CONSTRAINT "model_provider_custom_gateway_check" CHECK (("kind" <> 'Custom') or ("gateway_provider" = 'Custom'));

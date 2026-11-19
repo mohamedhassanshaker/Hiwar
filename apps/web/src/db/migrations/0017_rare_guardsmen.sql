@@ -1,2 +1,0 @@
-ALTER TABLE "ai"."run" DROP CONSTRAINT "run_trigger_check";--> statement-breakpoint
-ALTER TABLE "ai"."run" ADD CONSTRAINT "run_trigger_check" CHECK ("trigger" in ('Mention', 'Assignment', 'RequestStep', 'Schedule', 'Widget', 'Setup', 'Manual', 'Replay', 'Delegation'));

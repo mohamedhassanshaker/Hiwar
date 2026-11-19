@@ -1,2 +1,0 @@
-ALTER TABLE "work"."attachment" DROP CONSTRAINT "attachment_owner_check";--> statement-breakpoint
-ALTER TABLE "work"."attachment" ADD CONSTRAINT "attachment_owner_check" CHECK ("owner_type" in ('Request', 'WorkItem', 'Room'));

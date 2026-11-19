@@ -1,1 +1,0 @@
-ALTER TABLE "ai"."knowledge_collection" ADD COLUMN "last_error" text;

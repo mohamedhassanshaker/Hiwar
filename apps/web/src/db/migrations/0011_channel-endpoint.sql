@@ -1,1 +1,0 @@
-ALTER TABLE "ai"."channel" ADD COLUMN "endpoint_url" text;

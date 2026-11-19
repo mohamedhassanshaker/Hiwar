@@ -1,8 +1,0 @@
-apiVersion: v2
-name: cnpg-clusters
-description: >-
-  The CloudNativePG Cluster the platform needs, with its declarative databases and, for the
-  domain database, the PgBouncer Pooler the application connects through (SD-14).
-type: application
-version: 0.1.0
-appVersion: "18.6"

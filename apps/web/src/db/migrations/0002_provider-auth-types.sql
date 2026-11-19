@@ -1,2 +1,0 @@
-ALTER TABLE "ai"."provider_connection" DROP CONSTRAINT "provider_connection_auth_check";--> statement-breakpoint
-ALTER TABLE "ai"."provider_connection" ADD CONSTRAINT "provider_connection_auth_check" CHECK ("auth_type" in ('ApiKey', 'EntraId', 'IamRole', 'BearerToken', 'OAuth', 'None'));

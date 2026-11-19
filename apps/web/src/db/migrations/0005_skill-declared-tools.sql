@@ -1,1 +1,0 @@
-ALTER TABLE "ai"."skill_version" ADD COLUMN "declared_tools" text[] DEFAULT '{}'::text[] NOT NULL;

@@ -1,1 +1,0 @@
-ALTER TABLE "ai"."connector" ADD COLUMN "command" text;

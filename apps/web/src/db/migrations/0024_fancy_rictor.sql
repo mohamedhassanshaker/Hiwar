@@ -1,2 +1,0 @@
-ALTER TABLE "ai"."storyline_step" DROP CONSTRAINT "storyline_step_type_check";--> statement-breakpoint
-ALTER TABLE "ai"."storyline_step" ADD CONSTRAINT "storyline_step_type_check" CHECK ("step_type" in ('Message', 'Ask', 'Form', 'Confirm', 'Decide', 'Classify', 'Tool', 'Skill', 'Verify', 'CreateWork', 'Handoff', 'Wait', 'Subflow', 'GoTo', 'End'));
