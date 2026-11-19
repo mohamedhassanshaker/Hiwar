@@ -72,6 +72,7 @@ UI coverage ledgers, one per design artboard, are in [ui-coverage](ui-coverage/)
 | ID | Feature |
 | --- | --- |
 | BIL-001 | [Plan and usage](bil/001-plan-and-usage/spec.md) |
+| BIL-002 | [Payment methods and billing details](bil/002-payment-methods/spec.md) |
 
 ### [org](org/README.md) — Team, roles, security and audit log
 
@@ -97,6 +98,13 @@ UI coverage ledgers, one per design artboard, are in [ui-coverage](ui-coverage/)
 | OPS-002 | [Operator plans and prices](ops/002-plans-and-prices/spec.md) |
 | OPS-003 | [Time-limited support access](ops/003-support-access/spec.md) |
 | OPS-004 | [AI cost, margin and service health](ops/004-cost-and-health/spec.md) |
+| OPS-005 | [Organization setup, plan overrides and grace periods](ops/005-organization-setup-and-overrides/spec.md) |
+| OPS-006 | [Plan comparison, cost price list, packs and overage](ops/006-plan-catalogue-and-add-ons/spec.md) |
+| OPS-007 | [Public website content, featured items, offers and results](ops/007-website-content/spec.md) |
+| OPS-008 | [Support tickets, usage disputes, AI problems, safety and internal roles](ops/008-support-and-safety/spec.md) |
+| OPS-009 | [Cost breakdown, incidents and isolation tests](ops/009-cost-breakdown-incidents-isolation/spec.md) |
+| OPS-010 | [Subscriptions, invoices, overage lines, credit notes and coupons](ops/010-subscriptions-and-invoices/spec.md) |
+| OPS-011 | [Append-only ledger, allowance entries, payment events and disputes](ops/011-payments-and-ledger/spec.md) |
 
 ### [platform](platform/README.md) — Cross-cutting rules, brand, shell, design system, personas, open items
 
@@ -110,5 +118,7 @@ UI coverage ledgers, one per design artboard, are in [ui-coverage](ui-coverage/)
 | PLT-006 | [Personas, sample data and prototype behaviour](platform/006-sample-data-and-prototype/spec.md) |
 | PLT-007 | [Operator portal (as-is) and open decisions](platform/007-operator-portal-and-open-decisions/spec.md) |
 | PLT-008 | [Errors, notifications and search](platform/008-errors-notifications-search/spec.md) |
+| PLT-009 | [My profile, account menu and organization switcher](platform/009-profile-and-account/spec.md) |
+| PLT-010 | [AI capabilities from the reference module](platform/010-ai-capabilities/spec.md) |
 
 <!-- features:end -->

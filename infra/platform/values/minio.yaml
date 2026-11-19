@@ -1,0 +1,38 @@
+# Single node locally; `values-live` in the organisation's own helmfile overlay switches
+# this to the distributed mode. The licence of the chosen distribution is recorded in
+# versions.lock.md and needs sign-off before Test (SD note, section 7.4).
+#
+# MinIO's own images and its own chart are no longer anonymously available, so this is
+# Bitnami's chart with Bitnami's last freely published images, which carry the same
+# AGPL-3.0 licence as MinIO itself. `allowInsecureImages` is what lets the chart accept a
+# repository other than the `bitnami` one it defaults to.
+global:
+  security:
+    allowInsecureImages: true
+image:
+  repository: bitnamilegacy/minio
+clientImage:
+  repository: bitnamilegacy/minio-client
+console:
+  image:
+    repository: bitnamilegacy/minio-object-browser
+volumePermissions:
+  image:
+    repository: bitnamilegacy/os-shell
+mode: standalone
+statefulset:
+  replicaCount: 1
+persistence:
+  size: 20Gi
+resources:
+  requests: { cpu: 100m, memory: 512Mi }
+  limits: { cpu: "1", memory: 1Gi }
+service:
+  type: ClusterIP
+# The platform's own policies in `infra/policies/` are the only ones that govern hiwar-data.
+networkPolicy:
+  enabled: false
+auth:
+  existingSecret: minio-root
+  rootUserSecretKey: rootUser
+  rootPasswordSecretKey: rootPassword

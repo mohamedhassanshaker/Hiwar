@@ -32,19 +32,19 @@ def user(text: str) -> list[dict[str, str]]:
 
 class TestDeterminism:
     def test_the_same_request_answers_the_same_way(self) -> None:
-        first = answer("awp-local-fast", user("review claim EXP-4471"))
-        second = answer("awp-local-fast", user("review claim EXP-4471"))
+        first = answer("hiwar-local-fast", user("review claim EXP-4471"))
+        second = answer("hiwar-local-fast", user("review claim EXP-4471"))
         assert first.text == second.text
         assert first.completion_tokens == second.completion_tokens
 
     def test_a_different_request_answers_differently(self) -> None:
-        first = answer("awp-local-fast", user("review claim EXP-4471"))
-        second = answer("awp-local-fast", user("review claim EXP-9999"))
+        first = answer("hiwar-local-fast", user("review claim EXP-4471"))
+        second = answer("hiwar-local-fast", user("review claim EXP-9999"))
         assert first.text != second.text
 
     def test_the_model_is_part_of_the_request(self) -> None:
-        fast = answer("awp-local-fast", user("same")).text
-        reasoning = answer("awp-local-reasoning", user("same")).text
+        fast = answer("hiwar-local-fast", user("same")).text
+        reasoning = answer("hiwar-local-reasoning", user("same")).text
         assert fast != reasoning
 
 
@@ -170,7 +170,7 @@ class TestSurface:
     def test_a_completion_reports_usage_so_the_budget_can_meter_it(self) -> None:
         response = self.client.post(
             "/v1/chat/completions",
-            json={"model": "awp-local-fast", "messages": user("[[tokens:120]]")},
+            json={"model": "hiwar-local-fast", "messages": user("[[tokens:120]]")},
         )
         assert response.status_code == 200
         body = response.json()
@@ -181,7 +181,7 @@ class TestSurface:
         response = self.client.post(
             "/v1/chat/completions",
             json={
-                "model": "awp-local-fast",
+                "model": "hiwar-local-fast",
                 "messages": user("[[say:one two three]]"),
                 "stream": True,
             },
@@ -202,7 +202,7 @@ class TestSurface:
     def test_a_refusal_answers_503_like_an_unavailable_provider(self) -> None:
         response = self.client.post(
             "/v1/chat/completions",
-            json={"model": "awp-local-fast", "messages": user("[[fail]]")},
+            json={"model": "hiwar-local-fast", "messages": user("[[fail]]")},
         )
         assert response.status_code == 503
         assert response.json()["error"]["code"] == "unavailable"
@@ -210,7 +210,7 @@ class TestSurface:
     def test_embeddings_return_the_requested_dimension(self) -> None:
         response = self.client.post(
             "/v1/embeddings",
-            json={"model": "awp-local-embedding", "input": ["one", "two"]},
+            json={"model": "hiwar-local-embedding", "input": ["one", "two"]},
         )
         assert response.status_code == 200
         data = response.json()["data"]

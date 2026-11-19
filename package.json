@@ -1,11 +1,11 @@
 {
+  "private": true,
   "devDependencies": {
     "@playwright/cli": "^0.1.22",
     "@playwright/test": "^1.64.1",
     "@types/node": "^26.6.6"
   },
   "scripts": {
-    "test:e2e": "npm --prefix tests run test:normal",
-    "test:live": "npm --prefix tests run test -- --project=live"
+    "test:e2e": "playwright test"
   }
 }

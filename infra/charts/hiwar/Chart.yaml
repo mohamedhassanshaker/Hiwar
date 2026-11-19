@@ -1,0 +1,11 @@
+apiVersion: v2
+name: hiwar
+description: >-
+  The Tahseel Agentic Work Platform application workloads: the console, the agent service
+  and its workers, the sandbox manager, the connector runtime, the egress proxy, and the
+  migrate and bucket Jobs that must finish before the console starts.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords: [hiwar, agents]
+home: https://tahseel.ae

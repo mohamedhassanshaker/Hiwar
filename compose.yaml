@@ -1,0 +1,61 @@
+# Local services for Hiwar. The web application runs on the host (npm run dev in apps/web).
+# Every container has a memory limit, because the workstation is shared.
+name: hiwar
+
+services:
+  db:
+    # PostgreSQL 18, as tech-stack.md and the AI module use: uuidv7() is built in.
+    image: pgvector/pgvector:0.8.1-pg18
+    environment:
+      POSTGRES_USER: hiwar
+      POSTGRES_PASSWORD: hiwar
+      POSTGRES_DB: hiwar
+    ports: ["5433:5432"]
+    volumes: [db18:/var/lib/postgresql]
+    mem_limit: 1g
+    memswap_limit: 1g
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hiwar -d hiwar"]
+      interval: 5s
+      retries: 20
+
+  mail:
+    image: axllent/mailpit:v1.27
+    ports: ["8025:8025", "1025:1025"]
+    mem_limit: 128m
+    memswap_limit: 128m
+
+  modelstub:
+    build: { context: services/modelstub, target: runtime }
+    ports: ["8090:8080"]
+    mem_limit: 256m
+    memswap_limit: 256m
+
+  agent:
+    build: { context: services/agent }
+    profiles: [agent]
+    environment:
+      DATABASE_URL: postgresql://hiwar:hiwar@db:5432/hiwar
+      MODEL_BASE_URL: ${MODEL_BASE_URL:-http://modelstub:8080/v1}
+      MODEL_API_KEY: ${MODEL_API_KEY:-stub}
+      WEB_CALLBACK_URL: ${WEB_CALLBACK_URL:-http://host.docker.internal:3000}
+      AGENT_SERVICE_TOKEN: ${AGENT_SERVICE_TOKEN:-dev-agent-token}
+      FILES_DIR: /files
+      ALLOW_PRIVATE_EGRESS: ${ALLOW_PRIVATE_EGRESS:-0}
+    volumes: [./.data/files:/files:ro]
+    ports: ["8088:8080"]
+    depends_on:
+      db: { condition: service_healthy }
+    mem_limit: 768m
+    memswap_limit: 768m
+
+  # Stripe's official API mock, for testing the payment integration without an account.
+  stripe-mock:
+    image: stripe/stripe-mock:v0.206.0
+    profiles: [payments]
+    ports: ["12111:12111"]
+    mem_limit: 128m
+    memswap_limit: 128m
+
+volumes:
+  db18:

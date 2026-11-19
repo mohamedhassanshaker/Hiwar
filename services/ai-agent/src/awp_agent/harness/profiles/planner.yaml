@@ -1,0 +1,13 @@
+# Breaking requests into sub requests and work items.
+name: planner
+description: Turns a goal into a plan of requests, work items and changes.
+max_steps: 40
+max_tool_calls: 100
+agent_hop_limit: 3
+highest_tier_without_approval: T0
+verify: true
+stream: true
+storyline_mode: Guided
+step_guidance: >
+  Produce a plan before you change anything. Every item names its owner, its due date and the
+  reason it exists. Nothing is applied until the plan is approved.

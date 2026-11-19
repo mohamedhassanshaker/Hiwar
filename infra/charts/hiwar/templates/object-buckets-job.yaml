@@ -1,0 +1,52 @@
+{{- if .Values.jobs.objectBuckets.enabled }}
+# Creates the buckets and turns versioning on, before anything tries to write to them.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: object-buckets
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: object-buckets
+    {{- include "hiwar.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: object-buckets }
+    spec:
+      restartPolicy: Never
+      nodeSelector: {{- toYaml .Values.nodeSelector | nindent 8 }}
+      securityContext: {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: mc
+          image: {{ include "hiwar.image" (list . "minioClient") }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext: {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -e
+              mc alias set hiwar "$S3_ENDPOINT" "$S3_ACCESS_KEY" "$S3_SECRET_KEY"
+              for bucket in {{ join " " .Values.jobs.objectBuckets.buckets }}; do
+                mc mb --ignore-existing "hiwar/$bucket"
+              done
+              for bucket in {{ join " " .Values.jobs.objectBuckets.versioned }}; do
+                mc version enable "hiwar/$bucket"
+              done
+              {{- range $bucket, $days := .Values.jobs.objectBuckets.expireDays }}
+              echo '{"Rules":[{"ID":"expire","Status":"Enabled","Filter":{"Prefix":""},"Expiration":{"Days":{{ $days }}}}]}' | mc ilm import "hiwar/{{ $bucket }}"
+              {{- end }}
+          env:
+            - { name: S3_ENDPOINT, value: {{ .Values.config.s3Endpoint | quote }} }
+            # `mc` writes its alias configuration; the root filesystem is read-only.
+            - { name: MC_CONFIG_DIR, value: /tmp/.mc }
+            - { name: HOME, value: /tmp }
+          envFrom: [{ secretRef: { name: {{ .Values.secretName }} } }]
+          resources: {{- toYaml .Values.jobs.objectBuckets.resources | nindent 12 }}
+          volumeMounts: [{ name: tmp, mountPath: /tmp }]
+      volumes: [{ name: tmp, emptyDir: {} }]
+{{- end }}

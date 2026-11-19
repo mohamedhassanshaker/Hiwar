@@ -23,3 +23,5 @@ Code path: not yet assigned.
 - [PLT-006](006-sample-data-and-prototype/spec.md): Personas, sample data and prototype behaviour
 - [PLT-007](007-operator-portal-and-open-decisions/spec.md): Operator portal (as-is) and open decisions
 - [PLT-008](008-errors-notifications-search/spec.md): Errors, notifications and search
+- [PLT-009](009-profile-and-account/spec.md): My profile, account menu and organization switcher
+- [PLT-010](010-ai-capabilities/spec.md): AI capabilities from the reference module

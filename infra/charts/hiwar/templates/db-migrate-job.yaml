@@ -1,0 +1,37 @@
+{{- if .Values.jobs.dbMigrate.enabled }}
+# Stack specification 8.5: the migration runs as a Helm hook, so it finishes before `web`
+# starts. It applies the drizzle-kit migrations in order (the module's SQL prerequisites are migrations 0004 and 0006).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migrate
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: db-migrate
+    {{- include "hiwar.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-10"
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  backoffLimit: {{ .Values.jobs.dbMigrate.backoffLimit }}
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: db-migrate }
+    spec:
+      restartPolicy: Never
+      nodeSelector: {{- toYaml .Values.nodeSelector | nindent 8 }}
+      securityContext: {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: migrate
+          image: {{ include "hiwar.image" (list . "web") }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          # Run from apps/web, where the migrator finds src/db/migrations.
+          workingDir: /repo/apps/web
+          command: ["node", "db-migrate/migrate.mjs"]
+          securityContext: {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          envFrom: [{ secretRef: { name: {{ .Values.secretName }} } }]
+          resources: {{- toYaml .Values.jobs.dbMigrate.resources | nindent 12 }}
+          volumeMounts: [{ name: tmp, mountPath: /tmp }]
+      volumes: [{ name: tmp, emptyDir: {} }]
+{{- end }}

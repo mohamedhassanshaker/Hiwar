@@ -1,0 +1,23 @@
+# Everything an image never needs. Keeping this list short and explicit is what keeps the
+# build context small enough for the kind inner loop to stay fast.
+.git
+.github
+.vs
+factory
+docs
+**/node_modules
+**/.next
+**/.venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/playwright-report
+**/test-results
+.env
+.env.*
+!.env.example
+.data
+.playwright-cli
+test-results

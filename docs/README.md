@@ -9,7 +9,7 @@ last-updated: 2026-11-16
 
 # Documentation
 
-Mirqah documentation, numbered by area. [rules.md](rules.md) says what goes where and how documents are written and kept.
+Hiwar documentation, numbered by area. [rules.md](rules.md) says what goes where and how documents are written and kept.
 
 <!-- areas:start -->
 

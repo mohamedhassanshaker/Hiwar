@@ -1,0 +1,149 @@
+[project]
+name = "awp-agent"
+version = "0.1.0"
+description = "AWP agent service: AG-UI endpoint, agent harness, Temporal workers, knowledge ingestion."
+requires-python = "==3.12.*"
+dependencies = [
+    "fastapi>=0.143,<0.144",
+    "uvicorn[standard]>=0.41,<0.42",
+    "pydantic>=2.12,<3",
+    "pydantic-settings>=2.12,<3",
+    "pydantic-ai-slim[ag-ui,mcp,openai,temporal]>=2.55,<3",
+    "temporalio>=1.19,<2",
+    "openai>=3.26,<4",
+    "mcp>=1.21,<2",
+    "httpx>=0.28,<0.29",
+    "httpx2>=2.13,<3",
+    "structlog>=25.4,<26",
+    "pyyaml>=6.0,<7",
+    "jsonschema>=4.25,<5",
+    "psycopg[binary,pool]>=3.2,<4",
+    "pgvector>=0.5,<1",
+    "graphiti-core>=0.30,<1",
+    "neo4j>=5.28,<6",
+    "boto3>=1.40,<2",
+    "valkey>=6.1,<7",
+    "tiktoken>=0.12,<0.13",
+    "opentelemetry-sdk>=1.38,<2",
+    "opentelemetry-exporter-otlp-proto-http>=1.38,<2",
+    "openinference-semantic-conventions>=0.1,<1",
+    "arize-phoenix-otel>=0.17,<1",
+    # Pulled in transitively by `mcp` through authlib and pyjwt, which accept a version
+    # with PYSEC-2026-3552/3553/3554 against it. Named here only to hold the floor above
+    # those advisories; nothing in this service imports it directly.
+    "cryptography>=50.0.2",
+    "pydantic-ai-harness>=0.57.0",
+]
+
+[project.optional-dependencies]
+# Document parsing, generation, OCR, Arabic normalisation and PII detection. They pull a
+# large native stack (torch, spaCy models, Tesseract), so they are installed in the image and
+# skipped in a plain developer checkout; every use goes through an adapter in `ingestion/` or
+# `harness/tools/document_builder.py` that imports them lazily and degrades to a documented
+# fallback when they are absent.
+parsers = [
+    "docling>=2.55,<3",
+    "pypdf>=6.1,<7",
+    "python-docx>=1.2,<2",
+    "openpyxl>=3.1,<4",
+    "python-pptx>=1.0,<2",
+    "reportlab>=4.4,<5",
+    "pytesseract>=0.3.13,<0.4",
+    "presidio-analyzer>=2.2,<3",
+    "presidio-anonymizer>=2.2,<3",
+    # Presidio's analyser needs a spaCy pipeline and downloads one on first use. A pod has
+    # no egress, so the model is declared here instead: that puts it in the lock file, makes
+    # the image reproducible, and — unlike `spacy download` in a build stage — survives the
+    # `uv sync` that follows it. The small pipeline, not Presidio's large default: the
+    # difference is free-text name detection, and the identifiers this platform carries are
+    # matched by the shared patterns in `harness/hooks/pii.py`.
+    "en-core-web-sm",
+    "arabic-reshaper>=3.0.1",
+    "python-bidi>=0.6.12",
+    # Office 97–2003 `.xls`, which docling and openpyxl do not read (ADR-0002).
+    "xlrd>=2.0,<3",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15,<0.16",
+    "mypy>=1.19,<2",
+    "pytest>=9.0,<10",
+    "pytest-asyncio>=1.3,<2",
+    "types-pyyaml>=6.0,<7",
+    "types-jsonschema>=4.25,<5",
+]
+
+[project.scripts]
+awp-agent-worker = "awp_agent.worker:main"
+
+[tool.uv.sources]
+en-core-web-sm = { url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl" }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/awp_agent"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "A", "C4", "SIM", "RUF", "ASYNC", "PT", "BLE"]
+ignore = [
+    "B008",
+    # The platform is bilingual: Arabic letters in source are the point, not a typo.
+    "RUF001",
+    "RUF002",
+    "RUF003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["PT011"]
+
+[tool.mypy]
+python_version = "3.12"
+mypy_path = "src"
+packages = ["awp_agent"]
+strict = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = [
+    "neo4j.*",
+    "graphiti_core.*",
+    "pgvector.*",
+    "phoenix.*",
+    "openinference.*",
+    "tiktoken.*",
+    "boto3.*",
+    "botocore.*",
+    # The `parsers` extra. Imported lazily, so it is absent from a plain checkout.
+    "docling.*",
+    "presidio_analyzer.*",
+    "presidio_anonymizer.*",
+    "pytesseract.*",
+    "PIL.*",
+    "docx.*",
+    "openpyxl.*",
+    "pptx.*",
+    "reportlab.*",
+    "arabic_reshaper.*",
+    "bidi.*",
+    "xlrd.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+markers = [
+    "workflow: needs the Temporal test server",
+]

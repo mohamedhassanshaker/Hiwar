@@ -1,0 +1,14 @@
+# Arize Phoenix (stack specification 6.3). One Deployment; its state is the `phoenix`
+# database on the AWP PostgreSQL cluster, and its traces arrive over OTLP from the harness
+# and from agentgateway.
+#
+# `scripts/db-credentials.sh` writes the database URL into `hiwar-pg-phoenix`, and
+# `scripts/secrets-from-env.sh` writes the authentication secret and the API key into
+# `phoenix`; neither value is a literal anywhere.
+databaseSecret: hiwar-pg-phoenix
+authSecret: phoenix
+
+# SD-11: 60 days of traces. Datasets, experiments and prompts are kept.
+traceRetentionDays: 60
+
+storage: 10Gi

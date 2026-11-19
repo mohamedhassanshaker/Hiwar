@@ -68,7 +68,7 @@ A builder limits topics and decides when the agent brings in a person.
 - **FR-002**: The agent list MUST show each agent's name, version and status (Live or Draft). [/6.2]
 - **FR-003**: The editor MUST have the tabs Persona, Knowledge, Tools, Guardrails, Escalation and Versions. [/6.2]
 - **FR-004**: The Persona tab MUST have name, model, reply language (Auto / English / Arabic, labelled as in FR-016), tone, instructions (multiline), creativity slider, reply length and operating hours. [/6.2]
-- **FR-005**: The Knowledge tab MUST have a toggle per source; sources come from the Knowledge screen. [/6.2]
+- **FR-005**: The Knowledge tab MUST have a toggle per source; sources come from the Knowledge screen. Every ready, enabled source is on for every agent unless turned off here, so a new source or FAQ is available at once (KNO-002 FR-005). [/6.2]
 - **FR-006**: The Tools tab MUST list the organization's tools, each with a Read or Write badge; the built-in tools are listed in FR-023. [/6.2]
 - **FR-007**: Each Write tool MUST have a confirmation policy select: Ask the visitor first / Require staff approval / Run automatically, with "Require staff approval" as the default. [/6.2]
 - **FR-008**: Users MUST be able to add an HTTP tool from the Tools tab (Add HTTP tool) on Growth and above; on Starter the action is disabled with a note. [/6.2]

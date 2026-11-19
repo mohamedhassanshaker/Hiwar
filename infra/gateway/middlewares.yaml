@@ -1,0 +1,39 @@
+# Stack specification 8.6: the public edge carries security headers, and the admin hosts
+# are reachable only from the allowed ranges and then only behind each tool's own login.
+#
+# A template rendered by `scripts/render-infra.sh`: ADMIN_ALLOWED_CIDRS comes from `.env`.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: security-headers
+  namespace: hiwar-app
+spec:
+  headers:
+    frameDeny: true
+    contentTypeNosniff: true
+    browserXssFilter: true
+    referrerPolicy: strict-origin-when-cross-origin
+    stsSeconds: 31536000
+    stsIncludeSubdomains: true
+    # The Content-Security-Policy is deliberately not here. It carries a nonce that changes
+    # every request, so the console sets the whole header in `apps/web/src/proxy.ts`; these
+    # response headers are set rather than added, and a policy split across both would leave
+    # only whichever was written last.
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: admin-allowlist
+  namespace: hiwar-ai
+spec:
+  ipAllowList:
+    sourceRange: ${ADMIN_ALLOWED_CIDRS}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: admin-allowlist
+  namespace: hiwar-data
+spec:
+  ipAllowList:
+    sourceRange: ${ADMIN_ALLOWED_CIDRS}

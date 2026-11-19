@@ -1,46 +1,44 @@
-# Tahseel AWP — Agentic Work Platform
+# Hiwar
 
-A single-tenant platform where people and AI agents work under the same permissions, approvals and
-audit. The documentation starts at **[docs/README.md](docs/README.md)**, which indexes every
-document and gives a reading path for developers, architects, analysts, stakeholders and operators.
+Hiwar (حوار) lets a business build AI agents, install them on its website as a chat widget, watch every conversation live, and let staff take over from the AI and hand back. The documentation starts at [docs/README.md](docs/README.md); the requirements are the [feature specs](docs/01-product-requirements/specs/README.md).
 
 ## Where things are
 
 | Path | Holds |
 | --- | --- |
-| `apps/web` | Next.js full stack: console, domain logic, CopilotKit runtime, platform MCP server, channel gateway |
-| `services/agent` | Python agent service: AG-UI endpoints, the generic agent runtime, Temporal workers, knowledge ingestion |
-| `services/connectors`, `services/sandbox`, `services/modelstub` | Connector runtime, sandbox manager, deterministic local model engine |
-| `packages/contracts`, `packages/skills-bundled` | JSON Schemas shared by both runtimes; the bundled Agent Skills |
-| `infra/` | kind cluster, platform charts, the AWP chart, gateway, network policies, PostgreSQL SQL |
-| `docs/` | The documentation: [docs/README.md](docs/README.md) |
+| `apps/web` | Next.js application: public site, control panel, operator portal with the AI capabilities, widget and its API, platform MCP server, domain logic, database schema |
+| `services/agent` | Hiwar's agent service: one widget turn, customer knowledge ingestion and retrieval |
+| `services/ai-agent` | The AI capabilities module's agent service and Temporal workers (platform agents, runs, ingestion) |
+| `services/connectors`, `services/sandbox` | MCP connector runtime and per-run sandboxes for skill scripts (AI module) |
+| `services/modelstub` | Deterministic OpenAI-compatible model for local runs and tests |
+| `packages/` | The AI module's JSON contracts and bundled skills |
+| `infra/` | kind cluster, platform charts (helmfile), the `hiwar` Helm chart, gateway and policies |
+| `compose.yaml` | PostgreSQL 18 with pgvector, Mailpit, the model stub and the agent service, for running the web application on the host |
+| `docs/` | Documentation |
 
 ## Getting started
 
-[docs/12-user-and-developer-guides/local-platform.md](docs/12-user-and-developer-guides/local-platform.md) takes a clean machine to a seeded, running console. In
-short, with Docker, kind, kubectl, Helm, helmfile, Node.js and `uv` installed:
+The platform runs on Kubernetes: `make kind-up PROFILE=core` then `make seed` brings everything up locally on kind ([deployment](docs/08-devops-and-deployment/deployment.md)). For day-to-day work on the web application, the compose setup below is lighter.
+
+Requirements: Node.js 22 or later, Docker Desktop, and `uv` for working on the agent services.
 
 ```bash
-cp .env.example .env            # then fill in the secrets
-make kind-up                    # cluster, operators, platform charts
-make deploy                     # build images, install the AWP chart
-make seed                       # the organisation a fresh install starts with
+docker compose --profile agent --profile payments up -d --build      # PostgreSQL, Mailpit (http://localhost:8025), model stub, agent service
+cd apps/web
+npm install
+cp .env.example .env.local                        # local defaults; set ALLOW_PRIVATE_EGRESS=1 to verify localhost origins
+npm run db:migrate
+npm run db:seed:all                               # the AI module seed and the Gulf Bites demo organization
+npm run dev                                       # http://localhost:3000
 ```
 
-The console is then at `https://awp.localtest.me:8443`.
+Sign up at `/sign-up`; the verification email arrives in Mailpit. The demo organization's accounts use the password `demo-password-1` (for example `noura.demo@gulfbites.example`). To try the widget locally, create a deployment, add `http://localhost:3000/demo-site/<public key>` as an allowed origin, verify it and make the deployment live, then open that address.
 
-## Verification
+Give a staff account access to the operator portal at `/ops`, including the AI capabilities at `/ops/ai`, with `npm run ops:grant -- <email> platform_admin`.
+
+## Checks
 
 ```bash
-make verify                     # lint, types, unit and database suites, build, agent gates; CI calls the same script
-make test-e2e                   # Playwright against the kind deployment, English and Arabic
+cd apps/web && npm run typecheck && npm run lint && npm test     # tests need the compose database running
+cd services/agent && uv run ruff check src tests && uv run pytest
 ```
-
-[docs/12-user-and-developer-guides/conventions.md](docs/12-user-and-developer-guides/conventions.md) describes the testing
-strategy.
-
-## Licences
-
-[versions.lock.md](versions.lock.md) lists every image and major package with its version, digest and
-licence, including the components that need sign-off before an installation outside a developer
-machine.

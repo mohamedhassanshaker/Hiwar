@@ -67,7 +67,7 @@ A builder pauses a deployment; the widget then shows the offline message.
 - **FR-007**: The header MUST offer Pause (the widget shows the offline message) and Make live. [/6.4]
 - **FR-008**: A draft deployment MUST NOT go live until an origin is verified. [/6.4]
 - **FR-009**: Users MUST be able to create a deployment with New deployment, giving a name and an agent; it starts as Draft with a new public key.
-- **FR-010**: Verify domain MUST fetch the origin's page and mark the origin verified when it contains the snippet with this deployment's key; otherwise it MUST show the reason.
+- **FR-010**: Verify domain MUST fetch the page address entered for the origin (the origin's home page when only a domain was entered) and mark the origin verified when it contains the snippet with this deployment's key; otherwise it MUST show the reason. The whole origin is allowed once verified.
 - **FR-011**: Rotate key MUST ask for confirmation and MUST be recorded in the audit log. [/6.4]
 - **FR-012**: Removing the last verified origin of a live deployment MUST ask for confirmation and MUST pause the deployment. [/6.4]
 

@@ -1,0 +1,49 @@
+# kind, one replica of everything, images from the registry the bootstrap started.
+image:
+  registry: localhost:5001
+  # `Always`, because `make deploy` rebuilds the same tag: with `IfNotPresent` the kubelet
+  # keeps the image it already has and a rebuild never reaches the cluster.
+  pullPolicy: Always
+
+config:
+  appUrl: https://hiwar.localtest.me
+  webauthnRpId: hiwar.localtest.me
+  logLevel: debug
+  # Traces go to Phoenix, the chart default. With ../cluster-monitoring/install.sh run, set
+  # otlpEndpoint: http://otel-gateway.monitoring.svc.cluster.local:4318/v1/traces to add OpenSearch.
+
+web:
+  replicas: 1
+  autoscaling: { enabled: false }
+
+agentService:
+  replicas: 1
+
+agentWorkers:
+  - { name: agent-runs, queue: agent-runs, replicas: 1 }
+  # docling's CPU inference (layout, table structure, OCR) needs more than the shared
+  # default — the same profile the live environment gives every worker.
+  - { name: ingestion, queue: ingestion, replicas: 1, resources: { requests: { cpu: 500m, memory: 1Gi }, limits: { cpu: "2", memory: 4Gi } } }
+  - { name: maintenance, queue: maintenance, replicas: 1 }
+
+sandboxManager:
+  warmPool: 1
+
+egressProxy:
+  # D297: on a developer machine a connector, an API or a token endpoint may be anywhere: an
+  # external host, an address on the network, or this machine (see cluster-host-access.sh).
+  allowAll: true
+  allowedDomains:
+    - .localtest.me
+    - .tahseel.ae
+    - .uaepass.ae
+    - .openrouter.ai
+    # The Kontiki stock API, the server of the `stocks` OpenAPI connector (D234).
+    - kontiki.com.fj
+    # The Open-Meteo weather API, the server of the `open-meteo` OpenAPI connector (D283).
+    - api.open-meteo.com
+
+# The deterministic local engine, which is what makes a run provable without a provider key
+# (specification 7.4.8's custom-provider path). Never enabled outside a developer machine.
+modelEngine:
+  enabled: true

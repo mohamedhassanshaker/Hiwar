@@ -16,3 +16,4 @@ Code path: not yet assigned.
 ## Feature specs
 
 - [BIL-001](001-plan-and-usage/spec.md): Plan and usage
+- [BIL-002](002-payment-methods/spec.md): Payment methods and billing details

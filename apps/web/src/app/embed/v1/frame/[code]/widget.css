@@ -1,0 +1,652 @@
+/* The embedded widget's frame (widget specification 4.1): every colour, radius and type size
+   comes from the design system's tokens; `--wf-accent` is the deployment's own colour. The
+   panel has the console assistant panel's shape (D348): a card tinted by the accent, a header
+   on it, and the conversation in an inset card. */
+
+html:has(.awp-wf),
+body:has(.awp-wf) {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+.awp-wf {
+  --wf-accent: var(--action-primary-bg);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  box-sizing: border-box;
+  padding: 0 8px 8px;
+  background: linear-gradient(
+    170deg,
+    color-mix(in oklch, var(--wf-accent) 10%, var(--surface-raised)) 0%,
+    color-mix(in oklch, var(--wf-accent) 24%, var(--surface-raised)) 100%
+  );
+  color: var(--text-primary);
+  font-family: var(--font-family-primary), "AvenirArabic-SharjahGovt", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.awp-wf-off {
+  display: grid;
+  place-items: center;
+  height: 100vh;
+  color: var(--text-secondary);
+  font-family: var(--font-family-primary), sans-serif;
+}
+
+.awp-wf-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 8px 12px;
+}
+.awp-wf-logo {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--wf-accent);
+  color: #fff;
+  flex-shrink: 0;
+}
+.awp-wf-title {
+  flex: 1;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.awp-wf-head .awp-wf-icon {
+  min-width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border-divider);
+  background: var(--surface-raised);
+  color: var(--text-primary);
+}
+.awp-wf-head .awp-wf-icon:hover {
+  border-color: var(--wf-accent);
+}
+
+/* The inset card the conversation sits in. */
+.awp-wf-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 20px;
+  background: color-mix(in oklch, var(--surface-raised) 72%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--surface-raised) 80%, transparent);
+}
+/* Expanded over the host page, the panel fills it edge to edge, as the console's does (D298). */
+.awp-wf.is-expanded {
+  padding: 0;
+}
+.awp-wf.is-expanded .awp-wf-head {
+  padding-inline: 16px;
+}
+.awp-wf.is-expanded .awp-wf-body {
+  border-radius: 0;
+}
+
+.awp-wf-icon {
+  display: inline-grid;
+  place-items: center;
+  min-width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  cursor: pointer;
+}
+.awp-wf-icon:hover {
+  background: var(--surface-subtle);
+}
+.awp-wf-icon.on {
+  color: var(--wf-accent);
+}
+.awp-wf-small {
+  min-width: 24px;
+  height: 24px;
+  font-size: 12px;
+}
+.awp-wf-icon:focus-visible,
+.awp-wf-chip:focus-visible,
+.awp-wf-send:focus-visible,
+.awp-wf-row-item:focus-visible,
+.awp-wf-link:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+.awp-wf-menu-wrap {
+  position: relative;
+}
+.awp-wf-menu {
+  position: absolute;
+  inset-inline-end: 0;
+  top: 36px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  padding: 4px;
+  border: 1px solid var(--border-divider);
+  border-radius: 12px;
+  background: var(--surface-raised);
+  box-shadow: 0 12px 32px rgb(16 24 40 / 0.18);
+}
+.awp-wf-menu button {
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.awp-wf-menu button:hover {
+  background: var(--surface-subtle);
+}
+
+.awp-wf-disclaimer {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px 10px 16px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  border-bottom: 1px solid var(--border-divider);
+}
+.awp-wf-disclaimer span {
+  flex: 1;
+}
+
+.awp-wf-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+}
+.awp-wf-info {
+  background: var(--feedback-info-bg);
+  color: var(--feedback-info-text);
+}
+.awp-wf-warning {
+  background: var(--feedback-warning-bg);
+  color: var(--feedback-warning-text);
+}
+.awp-wf-error {
+  background: var(--feedback-danger-bg);
+  color: var(--feedback-danger-text);
+}
+
+.awp-wf-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.awp-wf-readonly .awp-wf-chip,
+.awp-wf-readonly .awp-wf-row-item {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.awp-wf-msg {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 88%;
+}
+.awp-wf-bot {
+  align-self: flex-start;
+}
+.awp-wf-user {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+.awp-wf-bubble {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  overflow-wrap: anywhere;
+}
+.awp-wf-bot .awp-wf-bubble {
+  border-radius: 18px;
+  border-end-start-radius: 6px;
+  background: var(--surface-raised);
+  box-shadow: 0 0 0 1px var(--border-divider);
+}
+.awp-wf-bubble p {
+  margin: 0;
+}
+.awp-wf-meta {
+  gap: 4px;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+.awp-wf-muted {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.awp-wf-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.awp-wf-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.awp-wf-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.awp-wf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 7px 16px;
+  border: 1px solid color-mix(in oklch, var(--wf-accent) 40%, var(--border-divider));
+  border-radius: 999px;
+  background: var(--surface-raised);
+  color: var(--wf-accent);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: box-shadow 0.15s;
+}
+.awp-wf-chip:hover:not(:disabled) {
+  border-color: var(--wf-accent);
+  box-shadow: 0 4px 12px var(--elevation-shadow-sm);
+}
+.awp-wf-chip:disabled {
+  border-color: var(--border-divider);
+  color: var(--text-secondary);
+  cursor: default;
+}
+.awp-wf-primary {
+  background: var(--wf-accent);
+  color: #fff;
+}
+.awp-wf-primary:hover:not(:disabled) {
+  background: var(--wf-accent);
+  filter: brightness(0.94);
+}
+.awp-wf-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--wf-accent);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.awp-wf-link:disabled {
+  color: var(--text-secondary);
+  text-decoration: none;
+  cursor: default;
+}
+
+.awp-wf-list-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.awp-wf-row-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border-divider);
+  border-radius: 16px;
+  background: var(--surface-raised);
+  color: var(--text-primary);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.awp-wf-row-item .awp-wf-col {
+  flex: 1;
+  gap: 2px;
+}
+.awp-wf-row-item:hover:not(:disabled) {
+  border-color: var(--wf-accent);
+}
+.awp-wf-badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface-subtle);
+  color: var(--text-secondary);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.awp-wf-ok {
+  align-self: flex-start;
+  background: var(--feedback-success-bg);
+  color: var(--feedback-success-text);
+}
+
+.awp-wf-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border-divider);
+  border-radius: 16px;
+  background: var(--surface-raised);
+}
+.awp-wf-carousel {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+}
+.awp-wf-carousel .awp-wf-card {
+  min-width: 220px;
+  scroll-snap-align: start;
+}
+.awp-wf-fields {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.awp-wf-field {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.awp-wf-field dt {
+  color: var(--text-secondary);
+}
+.awp-wf-field dd {
+  margin: 0;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  text-align: end;
+}
+.awp-wf-total {
+  padding-top: 6px;
+  border-top: 1px solid var(--border-divider);
+  font-weight: 700;
+}
+
+.awp-wf-timeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.awp-wf-timeline li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding-inline-start: 18px;
+  position: relative;
+}
+.awp-wf-timeline li::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  top: 6px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+}
+.awp-wf-timeline .awp-wf-done::before {
+  background: var(--feedback-success-icon);
+  border-color: var(--feedback-success-icon);
+}
+.awp-wf-timeline .awp-wf-current::before {
+  border-color: var(--wf-accent);
+  background: var(--wf-accent);
+}
+
+.awp-wf-inline-notice {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+.awp-wf-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.awp-wf-bar {
+  display: block;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--surface-subtle);
+  overflow: hidden;
+}
+.awp-wf-bar span {
+  display: block;
+  height: 100%;
+  background: var(--wf-accent);
+}
+
+.awp-wf-typing {
+  flex-direction: row;
+  gap: 4px;
+}
+.awp-wf-typing span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  animation: awp-wf-blink 1.2s infinite ease-in-out;
+}
+.awp-wf-typing span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.awp-wf-typing span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+@keyframes awp-wf-blink {
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .awp-wf-typing span {
+    animation: none;
+  }
+}
+
+.awp-wf-rating {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-secondary);
+}
+.awp-wf-star {
+  border: 0;
+  background: none;
+  color: var(--icon-disabled);
+  font-size: 22px;
+  cursor: pointer;
+}
+.awp-wf-star:hover,
+.awp-wf-star:focus-visible {
+  color: var(--feedback-warning-icon);
+}
+
+.awp-wf-composer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px 16px;
+}
+.awp-wf-locked {
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+.awp-wf-field-area {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 16px 16px;
+}
+.awp-wf-field-area .awp-wf-composer {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.awp-wf-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 1px solid var(--border-divider);
+  border-radius: 999px;
+  background: var(--surface-raised);
+  color: var(--text-primary);
+  font: inherit;
+}
+textarea.awp-wf-input {
+  border-radius: 20px;
+  resize: vertical;
+}
+.awp-wf-input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+.awp-wf-cc {
+  flex: 0 0 auto;
+  width: 88px;
+}
+.awp-wf-send {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--wf-accent);
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.awp-wf-send:disabled {
+  background: var(--action-primary-bg-disabled);
+  cursor: default;
+}
+.awp-wf-send.on {
+  box-shadow: 0 0 0 4px var(--surface-brand-subtle);
+}
+.awp-wf-mic {
+  background: var(--surface-raised);
+  color: var(--wf-accent);
+  border: 1px solid var(--border-divider);
+}
+.awp-wf-mic.on {
+  color: var(--feedback-danger-text);
+  border-color: var(--feedback-danger-border);
+}
+.awp-wf-mic[aria-busy="true"] {
+  cursor: progress;
+  opacity: 0.6;
+}
+.awp-wf-hint {
+  color: var(--feedback-danger-text);
+  font-size: 12px;
+}
+.awp-wf-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+.awp-wf-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.awp-wf-consent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.awp-wf-otp {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.awp-wf-otp-boxes {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+.awp-wf-otp-box {
+  width: 40px;
+  height: 48px;
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  background: var(--surface-raised);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 20px;
+  text-align: center;
+}
+.awp-wf-otp-box:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+
+@media (max-width: 480px) {
+  .awp-wf-msg {
+    max-width: 94%;
+  }
+  .awp-wf-chip,
+  .awp-wf-icon {
+    min-height: 40px;
+  }
+}

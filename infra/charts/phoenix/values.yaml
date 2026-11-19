@@ -1,0 +1,19 @@
+# The image is pinned by tag here and by digest in versions.lock.md.
+image: arizephoenix/phoenix:version-20.20.0-nonroot
+
+# The Secret holding PHOENIX_SQL_DATABASE_URL, written by scripts/db-credentials.sh from
+# the password CloudNativePG generated.
+databaseSecret: hiwar-pg-phoenix
+
+# The Secret holding `secret` (PHOENIX_SECRET) and `api-key` (PHOENIX_API_KEY), written by
+# scripts/secrets-from-env.sh.
+authSecret: phoenix
+
+# SD-11: traces are kept for this many days; datasets, experiments and prompts are kept.
+traceRetentionDays: 60
+
+storage: 10Gi
+
+resources:
+  requests: { cpu: 200m, memory: 512Mi }
+  limits: { cpu: "2", memory: 4Gi }

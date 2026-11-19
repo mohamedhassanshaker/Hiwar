@@ -1,0 +1,37 @@
+# Test: the organisation registry, two replicas of the console, gVisor for sandboxes.
+image:
+  registry: REGISTRY_HOST/hiwar
+  pullPolicy: IfNotPresent
+  pullSecrets: [{ name: registry-tahseel }]
+
+config:
+  appUrl: https://hiwar-test.tahseel.ae
+  webauthnRpId: hiwar-test.tahseel.ae
+  logLevel: info
+
+web:
+  replicas: 2
+  autoscaling: { enabled: false }
+  resources:
+    requests: { cpu: 500m, memory: 1Gi }
+    limits: { cpu: "2", memory: 2Gi }
+
+agentService:
+  replicas: 2
+
+agentWorkers:
+  - { name: agent-runs, queue: agent-runs, replicas: 2 }
+  # docling's CPU inference (layout, table structure, OCR) needs more than the shared
+  # default — the same profile the live environment gives every worker.
+  - { name: ingestion, queue: ingestion, replicas: 1, resources: { requests: { cpu: 500m, memory: 1Gi }, limits: { cpu: "2", memory: 4Gi } } }
+
+sandboxManager:
+  warmPool: 4
+
+egressProxy:
+  allowedDomains:
+    - .tahseel.ae
+    - .anthropic.com
+    - .openai.com
+    - .azure.com
+    - .uaepass.ae

@@ -1,0 +1,79 @@
+# Hiwar's own agent service (services/agent): one turn of a customer agent for the website
+# widget, and knowledge preparation for customer sources (AGT-001, KNO-001). Separate from the
+# AI module's agent-service, which runs the platform agents on Temporal.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: knowledge-files
+  namespace: {{ .Values.namespace }}
+  labels: {{- include "hiwar.labels" . | nindent 4 }}
+spec:
+  # ReadWriteOnce: web writes and the agent reads on the same node (the app pool has one node
+  # locally). Test and Live set a ReadWriteMany class through widgetAgent.filesStorageClass.
+  accessModes: [{{ .Values.widgetAgent.filesAccessMode }}]
+  {{- with .Values.widgetAgent.filesStorageClass }}
+  storageClassName: {{ . }}
+  {{- end }}
+  resources: { requests: { storage: {{ .Values.widgetAgent.filesSize }} } }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: widget-agent
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: widget-agent
+    {{- include "hiwar.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.widgetAgent.replicas }}
+  selector:
+    matchLabels: { app.kubernetes.io/name: widget-agent }
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: widget-agent
+        {{- include "hiwar.labels" . | nindent 8 }}
+    spec:
+      nodeSelector: {{- toYaml .Values.nodeSelector | nindent 8 }}
+      securityContext: {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: widget-agent
+          image: {{ include "hiwar.image" (list . "widgetAgent") }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext: {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          ports: [{ name: http, containerPort: {{ .Values.widgetAgent.port }} }]
+          env:
+            - { name: MODEL_BASE_URL, value: {{ .Values.widgetAgent.modelBaseUrl | quote }} }
+            - { name: WEB_CALLBACK_URL, value: "http://web.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.web.port }}" }
+            - { name: FILES_DIR, value: /files }
+            - { name: LOG_LEVEL, value: {{ .Values.config.logLevel | quote }} }
+          # DATABASE_URL, MODEL_API_KEY and AGENT_SERVICE_TOKEN come from the Secret.
+          envFrom:
+            {{- include "hiwar.envFrom" . | nindent 12 }}
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          resources: {{- toYaml .Values.widgetAgent.resources | nindent 12 }}
+          volumeMounts:
+            - { name: files, mountPath: /files, readOnly: true }
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - { name: files, persistentVolumeClaim: { claimName: knowledge-files } }
+        - { name: tmp, emptyDir: {} }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: widget-agent
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: widget-agent
+    {{- include "hiwar.labels" . | nindent 4 }}
+spec:
+  selector: { app.kubernetes.io/name: widget-agent }
+  ports: [{ name: http, port: {{ .Values.widgetAgent.port }}, targetPort: http }]

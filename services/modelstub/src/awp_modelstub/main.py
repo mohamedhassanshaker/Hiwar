@@ -23,16 +23,16 @@ log = structlog.get_logger(__name__)
 
 #: What this engine serves. Named for what they are, so no one mistakes one for a provider's.
 MODELS = (
-    "awp-local-reasoning",
-    "awp-local-fast",
-    "awp-local-classifier",
-    "awp-local-embedding",
+    "hiwar-local-reasoning",
+    "hiwar-local-fast",
+    "hiwar-local-classifier",
+    "hiwar-local-embedding",
 )
 
 #: The dimension the embedding model returns, matching the collections the seed creates.
 EMBEDDING_DIMENSIONS = 1024
 
-app = FastAPI(title="AWP deterministic local engine", version="0.1.0")
+app = FastAPI(title="Hiwar deterministic local engine", version="0.1.0")
 
 
 @app.get("/healthz")

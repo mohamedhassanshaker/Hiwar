@@ -24,3 +24,7 @@ playwright-report/
 # Local tool state
 .claude/scheduled_tasks.lock
 .claude/settings.local.json
+
+# Local data (uploaded files)
+.data/
+.playwright-cli/

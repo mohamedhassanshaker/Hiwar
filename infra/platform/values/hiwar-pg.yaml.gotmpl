@@ -1,0 +1,16 @@
+# Stack specification 7.1: one CloudNativePG cluster `hiwar-pg` carrying every relational
+# store the platform needs, each database owned by its own role.
+#
+#   hiwar                  domain, the system of record (web application only)
+#   hiwar_kb               passage vectors with pgvector (agent service only)
+#   temporal             Temporal persistence
+#   temporal_visibility  Temporal visibility
+#   phoenix              Arize Phoenix traces
+instances: {{ .Values.postgres.instances }}
+storage: {{ .Values.postgres.storage | quote }}
+pooler: true
+superuserAccess: true
+databases: [hiwar, hiwar_kb, temporal, temporal_visibility, phoenix]
+# `hiwar_kb` holds the vector index, so its extension is created with the database.
+extensions:
+  hiwar_kb: [vector, pg_trgm]

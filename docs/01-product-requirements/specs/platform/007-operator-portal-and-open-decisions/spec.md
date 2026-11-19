@@ -24,8 +24,8 @@ The P1 operator portal and its acceptance criteria are in OPS-001 to OPS-004 ([o
 
 ### Functional Requirements
 
-- **FR-001**: The operator portal (page 8) MUST contain O-Tenants, O-Plans, O-CMS, O-Support, O-Business, O-Billing, O-Finance, O-Me. [UI spec 9]
-- **FR-002**: The AI capabilities page (page 8b) MUST contain O-Agents, O-Skills, O-Connectors, O-Memory, O-Knowledge, O-Models, O-AI, O-Convos, O-Runs. [UI spec 9]
+- **FR-001**: The full operator portal (page 8; the P1 subset is FR-005) MUST contain O-Tenants, O-Plans, O-CMS, O-Support, O-Business, O-Billing, O-Finance, O-Me. [UI spec 9]
+- **FR-002**: The full AI capabilities page (page 8b; P2) MUST contain O-Agents, O-Skills, O-Connectors, O-Memory, O-Knowledge, O-Models, O-AI, O-Convos, O-Runs. [UI spec 9]
 - **FR-003**: Each operator screen MUST carry this Hiwar meaning: [UI spec 9]
 
 | Screen | Hiwar meaning |

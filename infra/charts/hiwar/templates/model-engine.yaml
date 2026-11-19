@@ -1,0 +1,82 @@
+{{- if .Values.modelEngine.enabled }}
+# The deterministic local engine: an OpenAI-compatible backend for development and tests.
+#
+# It is a *provider*, registered through the product's own custom-provider mechanism
+# (specification 7.4.8), not a platform component. agentgateway sits in front of it exactly
+# as it sits in front of a cloud provider, so the route, the failover chain, the token
+# metering and the trace are the real ones.
+#
+# `modelEngine.enabled` is true in `values-local.yaml` and false everywhere else: Test and
+# Live reach real providers, and a deterministic engine must never be one of them.
+#
+# The NetworkPolicy below is a *grant*, not a restriction — a policy can only add permission,
+# never remove it. `app-internal` allows ingress from this namespace only, and the gateway is
+# in `hiwar-ai`, so without this the engine is unreachable by the one caller that must reach it.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: model-engine
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: model-engine
+    {{- include "hiwar.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.modelEngine.replicas }}
+  selector:
+    matchLabels: { app.kubernetes.io/name: model-engine }
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: model-engine
+        {{- include "hiwar.labels" . | nindent 8 }}
+    spec:
+      nodeSelector: {{- toYaml .Values.nodeSelector | nindent 8 }}
+      securityContext: {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: model-engine
+          image: {{ include "hiwar.image" (list . "modelEngine") }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext: {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          ports: [{ name: http, containerPort: {{ .Values.modelEngine.port }} }]
+          env:
+            - { name: LOG_LEVEL, value: {{ .Values.config.logLevel | quote }} }
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources: {{- toYaml .Values.modelEngine.resources | nindent 12 }}
+          volumeMounts: [{ name: tmp, mountPath: /tmp }]
+      volumes: [{ name: tmp, emptyDir: {} }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: model-engine
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: model-engine
+    {{- include "hiwar.labels" . | nindent 4 }}
+spec:
+  selector: { app.kubernetes.io/name: model-engine }
+  ports: [{ name: http, port: {{ .Values.modelEngine.port }}, targetPort: http }]
+---
+# The grant described above: agentgateway calls the engine the way it calls any provider.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: model-engine-from-gateway
+  namespace: {{ .Values.namespace }}
+spec:
+  podSelector:
+    matchLabels: { app.kubernetes.io/name: model-engine }
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels: { hiwar/namespace: ai }
+      ports: [{ protocol: TCP, port: {{ .Values.modelEngine.port }} }]
+{{- end }}

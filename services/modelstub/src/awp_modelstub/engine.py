@@ -197,7 +197,10 @@ def answer(
     if "tokens" in found and found["tokens"].isdigit():
         completion_tokens = int(found["tokens"])
 
-    if "tool" in found and tools:
+    # A tool's result is back: answer in text instead of calling the tool again, which a
+    # directive still in the conversation would otherwise repeat for ever.
+    tool_answered = bool(messages) and messages[-1].get("role") == "tool"
+    if "tool" in found and tools and not tool_answered:
         name, _, raw = found["tool"].partition(" ")
         try:
             arguments = json.loads(raw) if raw.strip() else {}
@@ -265,11 +268,38 @@ def answer(
             completion_tokens=completion_tokens,
         )
 
+    passage = _first_passage(messages)
+    if passage:
+        return Reply(text=passage, prompt_tokens=prompt_tokens, completion_tokens=completion_tokens)
+
     return Reply(
         text=_sentence(seed),
         prompt_tokens=prompt_tokens,
         completion_tokens=completion_tokens,
     )
+
+
+_PASSAGE = re.compile(r"^\[1\] \(source: [^)]*\) (?P<text>.+)$", re.MULTILINE)
+
+
+def _first_passage(messages: list[dict[str, Any]]) -> str:
+    """The first knowledge passage given in a system message (Hiwar's prompt format).
+
+    Answering with it makes a grounded reply repeatable: the reply is the passage the
+    retrieval ranked first, so a test can assert which source answered.
+    """
+    for message in messages:
+        content = message.get("content")
+        if message.get("role") == "system" and isinstance(content, str):
+            match = _PASSAGE.search(content)
+            if match:
+                text = match.group("text").strip()
+                # An FAQ passage is "Question: ... Answer: ...": answer with the answer.
+                if "Answer:" in text:
+                    text = text.split("Answer:", 1)[1].strip()
+                sentences = re.split(r"(?<=[.!?؟])\s+", text)
+                return " ".join(sentences[:2])[:400]
+    return ""
 
 
 def embedding(text: str, dimensions: int) -> list[float]:
