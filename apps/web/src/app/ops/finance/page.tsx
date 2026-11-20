@@ -82,15 +82,19 @@ export default function FinancePage() {
             </div>
             <Link className="btn outline sm" href="/ops/billing">Grant goodwill conversations</Link>
           </div>
-          <div className="card-c table-wrap">
-            <table className="table">
-              <thead><tr><th scope="col">Entry</th><th scope="col">Date</th><th scope="col">Description</th><th scope="col">Source</th><th scope="col" className="r">AI conversations</th></tr></thead>
-              <tbody>
-                {allow.map(([id, dt, d, src, v]) => (
-                  <tr key={id}><td className="mono">{id}</td><td>{dt}</td><td>{d}</td><td className="sm muted">{src}</td><td className={v.startsWith("−") ? "r tnum c-danger" : "r tnum"}>{v}</td></tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="card-c">
+            <DataTable
+              rows={allow}
+              noun="allowance entries"
+              rowKey={(r) => r[0]}
+              columns={[
+                { key: "i", label: "Entry", text: (r) => r[0], render: (r) => <span className="mono">{r[0]}</span> },
+                { key: "t", label: "Date", text: (r) => r[1], render: (r) => r[1] },
+                { key: "d", label: "Description", text: (r) => r[2], render: (r) => r[2] },
+                { key: "s", label: "Source", text: (r) => r[3], render: (r) => <span className="sm muted">{r[3]}</span> },
+                { key: "v", label: "AI conversations", className: "r", text: (r) => r[4], sort: (r) => Number(r[4].replace(/[+,]/g, "").replace("−", "-")), render: (r) => <span className={r[4].startsWith("−") ? "tnum c-danger" : "tnum"}>{r[4]}</span> },
+              ]}
+            />
             <p className="sm muted">Included conversations refresh on the 1st and don’t roll over. Pack conversations last 12 months and are used after included ones. Overage is billed in money on the month-end invoice, so it doesn’t appear here.</p>
           </div>
         </section>
@@ -101,13 +105,18 @@ export default function FinancePage() {
             <div className="t"><h2 className="card-t">Payment provider events</h2><p className="card-d">Signed webhook events from Stripe; each one is applied once.</p></div>
             <Status tone="ok">Webhook verified</Status>
           </div>
-          <div className="card-c table-wrap">
-            <table className="table">
-              <thead><tr><th scope="col">Event</th><th scope="col">Type</th><th scope="col">For</th><th scope="col">Result</th></tr></thead>
-              <tbody>
-                {EVENTS.map(([id, t, f, r]) => <tr key={id}><td className="mono">{id}</td><td className="mono sm">{t}</td><td>{f}</td><td className="sm">{r}</td></tr>)}
-              </tbody>
-            </table>
+          <div className="card-c">
+            <DataTable
+              rows={EVENTS}
+              noun="payment events"
+              rowKey={(r) => r[0]}
+              columns={[
+                { key: "i", label: "Event", text: (r) => r[0], render: (r) => <span className="mono">{r[0]}</span> },
+                { key: "t", label: "Type", text: (r) => r[1], render: (r) => <span className="mono sm">{r[1]}</span> },
+                { key: "f", label: "For", text: (r) => r[2], render: (r) => r[2] },
+                { key: "r", label: "Result", text: (r) => r[3], render: (r) => <span className="sm">{r[3]}</span> },
+              ]}
+            />
             <p className="sm muted">The provider’s processing fee is recorded in the ledger as a cost line.</p>
           </div>
         </section>

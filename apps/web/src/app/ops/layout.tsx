@@ -33,7 +33,7 @@ export default async function OpsLayout({ children }: { children: ReactNode }) {
   ];
   return (
     <div className="panel-shell">
-      <nav aria-label="Operator navigation" className="side-nav" style={{ overflowY: "auto" }}>
+      <nav aria-label="Operator navigation" className="side-nav" style={{ overflowY: "auto", overflowX: "hidden" }}>
         <Brand href="/ops" light />
         <div className="org-chip">
           <span className="col gap-0">

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
+import { DataTable } from "@/components/data-table";
 import { Dialog } from "@/components/dialog";
 import { toast } from "@/components/toast";
 import type { PlanLimits } from "@/db/schema";
@@ -186,42 +187,35 @@ export function BillingClient(props: Props) {
             )}
           </section>
 
-          <div className="table-wrap">
-            <table className="table">
-              <caption className="sr-only">Invoices</caption>
-              <thead>
-                <tr>
-                  <th scope="col">Invoice</th>
-                  <th scope="col">Period</th>
-                  <th scope="col" className="r">Amount</th>
-                  <th scope="col">Status</th>
-                  <th scope="col"><span className="sr-only">Download</span></th>
-                </tr>
-              </thead>
-              <tbody>
-                {props.invoices.map((i) => (
-                  <tr key={i.id}>
-                    <td className="mono">{i.number}</td>
-                    <td>{i.period}</td>
-                    <td className="r tnum">AED {i.total}</td>
-                    <td>
-                      <span className={i.status === "paid" ? "stt ok" : i.status === "failed" ? "stt bad" : "stt warn"}>{i.status === "paid" ? "Paid" : i.status === "failed" ? "Failed" : "Open"}</span>
-                    </td>
-                    <td className="r">
-                      <a className="btn ghost sm" href={`/api/invoices/${i.id}`} onClick={() => toast(`Invoice ${i.number} is downloading.`)}>
-                        <i className="i i-download" /> PDF
-                      </a>
-                    </td>
-                  </tr>
-                ))}
-                {props.invoices.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="muted">No invoices yet. The first one is issued at the end of your first paid month.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            rows={props.invoices}
+            noun="invoices"
+            caption="Invoices"
+            rowKey={(i) => i.id}
+            pageSize={10}
+            empty={<p className="sm muted">No invoices yet. The first one is issued at the end of your first paid month.</p>}
+            columns={[
+              { key: "n", label: "Invoice", text: (i) => i.number, render: (i) => <span className="mono">{i.number}</span> },
+              { key: "p", label: "Period", text: (i) => i.period, render: (i) => i.period },
+              { key: "a", label: "Amount", className: "r", text: (i) => `AED ${i.total}`, sort: (i) => Number(i.total), render: (i) => <span className="tnum">AED {i.total}</span> },
+              {
+                key: "s",
+                label: "Status",
+                text: (i) => (i.status === "paid" ? "Paid" : i.status === "failed" ? "Failed" : "Open"),
+                render: (i) => <span className={i.status === "paid" ? "stt ok" : i.status === "failed" ? "stt bad" : "stt warn"}>{i.status === "paid" ? "Paid" : i.status === "failed" ? "Failed" : "Open"}</span>,
+              },
+              {
+                key: "d",
+                label: "Download",
+                className: "r",
+                render: (i) => (
+                  <a className="btn ghost sm" href={`/api/invoices/${i.id}`} onClick={() => toast(`Invoice ${i.number} is downloading.`)}>
+                    <i className="i i-download" /> PDF
+                  </a>
+                ),
+              },
+            ]}
+          />
         </div>
 
         <div className="narrow">

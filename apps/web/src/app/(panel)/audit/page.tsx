@@ -1,3 +1,4 @@
+import { RecordTable } from "@/components/data-table";
 import { AREAS, listAudit } from "@/server/audit-log";
 import { requireMember } from "@/server/session";
 import { AuditFilters } from "./filters";
@@ -23,45 +24,30 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
         </div>
         <AuditFilters areas={[...AREAS]} area={area} q={q} exportHref={exportHref} />
       </div>
-      <div className="table-wrap">
-        <table className="table">
-          <caption className="sr-only">Audit log entries</caption>
-          <thead>
-            <tr>
-              <th scope="col">When</th>
-              <th scope="col">Who</th>
-              <th scope="col">Area</th>
-              <th scope="col">Action</th>
-              <th scope="col">Item</th>
-              <th scope="col">Change</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.id}>
-                <td className="sm tnum">{when(r.createdAt)}</td>
-                <td>{r.actorName}</td>
-                <td>
-                  <span className="badge">{r.area}</span>
-                </td>
-                <td>{r.action}</td>
-                <td>{r.item}</td>
-                <td className="sm muted">{r.change}</td>
-              </tr>
-            ))}
-            {rows.length === 0 && (
-              <tr>
-                <td colSpan={6}>
-                  <div className="empty">
-                    <span className="b">No entries match</span>
-                    <span className="sm muted">Try another filter.</span>
-                  </div>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <RecordTable
+        noun="audit entries"
+        caption="Audit log entries"
+        search={false}
+        pageSize={50}
+        columns={[{ label: "When" }, { label: "Who" }, { label: "Area" }, { label: "Action" }, { label: "Item" }, { label: "Change" }]}
+        rows={rows.map((r) => ({
+          key: r.id,
+          cells: [
+            { v: <span className="sm tnum">{when(r.createdAt)}</span>, s: r.createdAt.getTime() },
+            { v: r.actorName, s: r.actorName ?? "" },
+            { v: <span className="badge">{r.area}</span>, s: r.area },
+            { v: r.action, s: r.action },
+            { v: r.item, s: r.item ?? "" },
+            { v: <span className="sm muted">{r.change}</span>, s: r.change ?? "" },
+          ],
+        }))}
+        empty={
+          <div className="empty">
+            <span className="b">No entries match</span>
+            <span className="sm muted">Try another filter.</span>
+          </div>
+        }
+      />
       <p className="note-p">Only Owner and Admin roles can see this page. Exports are logged too.</p>
     </>
   );

@@ -50,10 +50,11 @@ test.describe("OPS-004 AI cost, margin and service health", () => {
     await expect(table.getByRole("columnheader")).toHaveText(["Organization", "Plan", "AI conversations", "AI cost", "Revenue", "Margin"]);
     const margins = (await table.locator("tbody tr td:last-child").allTextContents()).map((t) => Number(t.replace(/[^\d.-]/g, "")));
     expect(margins).toEqual([...margins].sort((a, b) => a - b));
+    await page.getByLabel("Search organizations").fill(customer.org);
     const row = table.getByRole("row").filter({ hasText: customer.org });
     await expect(row.getByRole("cell").nth(1)).toHaveText("Starter");
     await expect(row.getByRole("cell").nth(2)).toHaveText("1");
-    await expect(row.getByRole("cell").nth(5)).toHaveClass(/c-danger/);
+    await expect(row.getByRole("cell").nth(5).locator(".c-danger")).toBeVisible();
   });
 
   test("AC-OPS-004-04: the last 24 hours show first-reply median and 95th percentile, model errors, widget load errors, ingestion failures and double replies", async () => {

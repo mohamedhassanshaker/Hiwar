@@ -49,7 +49,7 @@ test.describe("OPS-002 Operator plans and prices", () => {
     for (const plan of ["Trial", "Starter", "Growth", "Business", "Enterprise"]) {
       const card = editor(page, plan);
       await expect(card).toBeVisible();
-      for (const field of ["Monthly AED", "Yearly AED", "Overage AED per AI conversation", "Trial days", "aiConversations", "agents", "deployments", "seats", "storageGb"]) {
+      for (const field of ["Monthly AED", "Yearly AED", "Overage AED per AI conversation", "Trial days", "AI conversations a month", "Agents", "Deployments", "Seats", "Knowledge storage (GB)"]) {
         await expect(card.getByLabel(field, { exact: true })).toBeVisible();
       }
       for (const box of ["fast model", "standard model", "advanced model", "HTTP tools"]) await expect(card.getByRole("checkbox", { name: box })).toBeVisible();
@@ -57,7 +57,7 @@ test.describe("OPS-002 Operator plans and prices", () => {
     const growth = editor(page, "Growth");
     await expect(growth.getByLabel("Monthly AED", { exact: true })).toHaveValue("799");
     await expect(growth.getByLabel("Yearly AED", { exact: true })).toHaveValue("7990");
-    await expect(growth.getByLabel("aiConversations", { exact: true })).toHaveValue("2000");
+    await expect(growth.getByLabel("AI conversations a month", { exact: true })).toHaveValue("2000");
     await expect(editor(page, "Trial").getByLabel("Trial days", { exact: true })).toHaveValue("14");
   });
 
@@ -87,7 +87,7 @@ test.describe("OPS-002 Operator plans and prices", () => {
     await choosePlan(existing.page, "Growth");
     await existing.page.goto("/team");
     await expect(existing.page.getByText("1 of 10 seats used.")).toBeVisible();
-    const restore = await savePlan(admin.page, "Growth", { seats: "12" }, "More seats for Growth", true);
+    const restore = await savePlan(admin.page, "Growth", { Seats: "12" }, "More seats for Growth", true);
     try {
       await existing.page.goto("/team");
       await expect(existing.page.getByText("1 of 12 seats used.")).toBeVisible();

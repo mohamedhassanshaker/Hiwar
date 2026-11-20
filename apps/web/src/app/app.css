@@ -10,7 +10,7 @@
 .panel-main{flex:1;min-width:0;display:flex;flex-direction:column}
 .support-banner{background:#fff4e0;color:#8a5800;font-size:13px;padding:6px 16px;text-align:center;font-weight:600}
 .offline-banner{background:#fdeceb;color:#c8261d;font-size:13px;padding:6px 16px;text-align:center}
-.side-nav{width:248px;flex:none;background:#1b1f4b;color:#fff;display:flex;flex-direction:column;gap:14px;padding:18px 14px;position:sticky;top:0;height:100vh;overflow:auto}
+.side-nav{width:248px;flex:none;background:#1b1f4b;color:#fff;display:flex;flex-direction:column;gap:14px;padding:18px 14px;position:sticky;top:0;height:100vh;overflow-y:auto;overflow-x:hidden}
 .side-nav .nav-close{display:none;color:#fff;align-self:flex-end}
 .nav-sub{color:var(--nav-sub)}
 .org-chip,.user-chip{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:rgba(255,255,255,.06)}
@@ -73,3 +73,23 @@
 .steps-nav .chip.done{border-color:var(--primary)}
 .side-nav button.nav-item{background:none;border:0;width:100%;text-align:start;cursor:pointer;font-family:inherit}
 .dt-tools .input,.dt-tools .select{width:auto;min-width:180px;flex:0 1 240px}
+
+/* DataTable (components/data-table.tsx) */
+.dt{width:100%;min-width:0}
+.th-sort{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font:inherit;color:inherit;border-radius:4px}
+.th-sort::after{content:"\2195";opacity:.35;font-size:11px}
+th[aria-sort=ascending] .th-sort::after{content:"\2191";opacity:1}
+th[aria-sort=descending] .th-sort::after{content:"\2193";opacity:1}
+.th-sort:focus-visible{outline:2px solid var(--ring,#6d6af0);outline-offset:2px}
+th.r .th-sort{flex-direction:row-reverse}
+.dt-cards{list-style:none;margin:0;padding:0}
+.dt-cards .kv dd{overflow-wrap:anywhere}
+.dt-pager .select{width:auto;min-height:32px}
+
+/* Plan editor (ops/plans/plan-editor.tsx) */
+.plan-group{border:0;margin:0;padding:0;min-width:0;display:flex;flex-direction:column;gap:8px}
+.plan-group>legend{padding:0;margin-bottom:8px}
+.plan-save{justify-content:flex-start}
+.plan-save .input.grow{flex:1 1 260px;width:auto}
+.plan-save .btn{margin-inline-start:auto}
+.side-nav>*{min-width:0}.side-nav .nav-item{min-width:0;overflow-wrap:anywhere}

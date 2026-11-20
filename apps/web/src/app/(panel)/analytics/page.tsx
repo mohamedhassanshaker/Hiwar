@@ -1,3 +1,4 @@
+import { RecordTable } from "@/components/data-table";
 import Link from "next/link";
 
 import { dashboard, type Dimension, type Range } from "@/server/analytics";
@@ -8,6 +9,12 @@ import { AnalyticsControls } from "./controls";
 export const metadata = { title: "Analytics" };
 
 const DIM_LABEL: Record<Dimension, string> = { deployment: "Deployment", agent: "Agent", language: "Language" };
+
+/** A figure such as "AED 0.12" or "64%" as a number to sort by. */
+function num(x: unknown): number | string {
+  const v = Number.parseFloat(String(x).replace(/[^\d.-]/g, ""));
+  return Number.isNaN(v) ? String(x) : v;
+}
 
 /** C-Analytics (ANA-001). Support Agents get the limited view: no cost, no export (FR-016). */
 export default async function AnalyticsPage({ searchParams }: { searchParams: Promise<{ range?: string; by?: string }> }) {
@@ -72,37 +79,25 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
               </h2>
               <AnalyticsControls range={range} by={by} only="dimension" canExport={false} />
             </div>
-            <div className="table-wrap">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th scope="col">{DIM_LABEL[by]}</th>
-                    <th scope="col" className="r">Conversations</th>
-                    <th scope="col" className="r">Resolved by AI</th>
-                    <th scope="col" className="r">Reached a person</th>
-                    {!limited && <th scope="col" className="r">Cost per conversation</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.breakdown.map((r) => (
-                    <tr key={r.name}>
-                      <td>{r.name}</td>
-                      <td className="r tnum">{r.conversations}</td>
-                      <td className="r tnum">{r.resolved}</td>
-                      <td className="r tnum">{r.reached}</td>
-                      {!limited && <td className="r tnum">{r.cost}</td>}
-                    </tr>
-                  ))}
-                  {data.breakdown.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="muted">
-                        No conversations in this range.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <RecordTable
+              noun="breakdown rows"
+              caption={`Breakdown by ${DIM_LABEL[by]}`}
+              columns={[
+                { label: DIM_LABEL[by] },
+                { label: "Conversations", className: "r" },
+                { label: "Resolved by AI", className: "r" },
+                { label: "Reached a person", className: "r" },
+                ...(limited ? [] : [{ label: "Cost per conversation", className: "r" }]),
+              ]}
+              rows={data.breakdown.map((r) => ({
+                key: r.name,
+                cells: [
+                  { v: r.name, s: r.name },
+                  ...[r.conversations, r.resolved, r.reached, ...(limited ? [] : [r.cost])].map((x) => ({ v: <span className="tnum">{x}</span>, s: num(x) })),
+                ],
+              }))}
+              empty={<p className="sm muted">No conversations in this range.</p>}
+            />
           </section>
         </div>
         <div className="narrow">

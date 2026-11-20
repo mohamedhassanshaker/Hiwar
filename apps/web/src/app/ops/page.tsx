@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { PLAN_LABEL } from "@/server/plans";
 import { listOrganizations, requireOperator } from "@/server/ops";
+import { RecordTable } from "@/components/data-table";
 import { TenantsClient } from "./tenants-client";
 
 export const metadata = { title: "Organizations" };
@@ -29,53 +30,45 @@ export default async function OrganizationsPage({ searchParams }: { searchParams
       </div>
       <TenantsClient
         realList={
-          <>
-        <form className="row gap-8" action="/ops">
-          <label className="sr-only" htmlFor="oq">Search</label>
-          <input id="oq" name="q" className="input" placeholder="Name or owner email" defaultValue={sp.q} />
-          <label className="sr-only" htmlFor="op">Plan</label>
-          <select id="op" name="plan" className="select" defaultValue={sp.plan ?? ""}>
-            <option value="">All plans</option>
-            {Object.entries(PLAN_LABEL).map(([k, v]) => (
-              <option key={k} value={k}>{v}</option>
-            ))}
-          </select>
-          <label className="sr-only" htmlFor="os">Status</label>
-          <select id="os" name="status" className="select" defaultValue={sp.status ?? ""}>
-            <option value="">All statuses</option>
-            {Object.entries(STATUS).map(([k, [, v]]) => (
-              <option key={k} value={k}>{v}</option>
-            ))}
-          </select>
-          <button className="btn outline">Filter</button>
-        </form>
-      <div className="table-wrap">
-        <table className="table">
-          <thead>
-            <tr>
-              <th scope="col">Organization</th>
-              <th scope="col">Owner</th>
-              <th scope="col">Plan</th>
-              <th scope="col">Status</th>
-              <th scope="col" className="r">AI conversations this month</th>
-              <th scope="col">Created</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.id}>
-                <td><Link href={`/ops/orgs/${r.id}`} className="b">{r.name}</Link></td>
-                <td>{r.owner ?? "—"}</td>
-                <td>{PLAN_LABEL[r.plan]}</td>
-                <td><span className={`stt ${STATUS[r.status][0]}`}>{STATUS[r.status][1]}</span></td>
-                <td className="r tnum">{r.used} of {r.allowance.toLocaleString("en-US")}</td>
-                <td className="sm muted">{r.created_at.slice(0, 10)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-          </>
+        <div className="col gap-12">
+          <form className="row gap-8 dt-tools" action="/ops">
+            <label className="sr-only" htmlFor="oq">Search</label>
+            <input id="oq" name="q" type="search" className="input" placeholder="Name or owner email" defaultValue={sp.q} />
+            <label className="sr-only" htmlFor="op">Plan</label>
+            <select id="op" name="plan" className="select" defaultValue={sp.plan ?? ""}>
+              <option value="">All plans</option>
+              {Object.entries(PLAN_LABEL).map(([k, v]) => (
+                <option key={k} value={k}>{v}</option>
+              ))}
+            </select>
+            <label className="sr-only" htmlFor="os">Status</label>
+            <select id="os" name="status" className="select" defaultValue={sp.status ?? ""}>
+              <option value="">All statuses</option>
+              {Object.entries(STATUS).map(([k, [, v]]) => (
+                <option key={k} value={k}>{v}</option>
+              ))}
+            </select>
+            <button className="btn outline">Filter</button>
+          </form>
+          <RecordTable
+            noun="organizations"
+            caption="Organizations"
+            search={false}
+            columns={[{ label: "Organization" }, { label: "Owner" }, { label: "Plan" }, { label: "Status" }, { label: "AI conversations this month", className: "r" }, { label: "Created" }]}
+            rows={rows.map((r) => ({
+              key: r.id,
+              cells: [
+                { v: <Link href={`/ops/orgs/${r.id}`} className="b">{r.name}</Link>, s: r.name },
+                { v: r.owner ?? "—", s: r.owner ?? "" },
+                { v: PLAN_LABEL[r.plan], s: PLAN_LABEL[r.plan] },
+                { v: <span className={`stt ${STATUS[r.status][0]}`}>{STATUS[r.status][1]}</span>, s: STATUS[r.status][1] },
+                { v: <span className="tnum">{r.used} of {r.allowance.toLocaleString("en-US")}</span>, s: r.used },
+                { v: <span className="sm muted">{r.created_at.slice(0, 10)}</span>, s: r.created_at },
+              ],
+            }))}
+            empty={<p className="sm muted">No organization matches. Change the search or the filters.</p>}
+          />
+        </div>
         }
       />
     </>

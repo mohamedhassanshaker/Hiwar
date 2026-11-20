@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { FormDialog, SampleNote, Seg, useDialog } from "@/components/mock";
+import { DataTable, FormDialog, SampleNote, Seg, useDialog } from "@/components/mock";
 import { toast } from "@/components/toast";
 import { FEATURES, PLAN_KEYS, PLAN_NAMES } from "@/mock/tenants";
 
@@ -139,27 +139,19 @@ export function PlansExtras() {
               <i className="i i-plus" /> Add pack
             </button>
           </div>
-          <div className="card-c table-wrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th scope="col">Pack</th>
-                  <th scope="col">For</th>
-                  <th scope="col" className="r">Price</th>
-                  <th scope="col">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {packs.map(([n, f, p, on]) => (
-                  <tr key={n}>
-                    <td>{n}</td>
-                    <td className="sm">{f}</td>
-                    <td className="r tnum">{money(p)}</td>
-                    <td><span className={on ? "badge success" : "badge secondary"}>{on ? "On sale" : "Draft"}</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="card-c">
+            <DataTable
+              rows={packs}
+              noun="conversation packs"
+              rowKey={(r) => r[0]}
+              pageSize={10}
+              columns={[
+                { key: "n", label: "Pack", text: (r) => r[0], sort: (r) => Number(r[0].replace(/\D/g, "")), render: (r) => r[0] },
+                { key: "f", label: "For", text: (r) => r[1], render: (r) => <span className="sm">{r[1]}</span> },
+                { key: "p", label: "Price", className: "r", text: (r) => money(r[2]), sort: (r) => r[2], render: (r) => <span className="tnum">{money(r[2])}</span> },
+                { key: "s", label: "Status", text: (r) => (r[3] ? "On sale" : "Draft"), render: (r) => <span className={r[3] ? "badge success" : "badge secondary"}>{r[3] ? "On sale" : "Draft"}</span> },
+              ]}
+            />
           </div>
         </section>
         <section className="card">

@@ -118,8 +118,8 @@ test.describe("OPS-001 Operator organizations list and actions", () => {
     const { page } = admin;
     await openOrg(page, customer.org);
     await actions(page).getByLabel("Plan").selectOption({ label: "Enterprise" });
-    await actions(page).getByLabel("seats").fill("7");
-    await actions(page).getByLabel("deployments").fill("3");
+    await actions(page).getByLabel("Seats", { exact: true }).fill("7");
+    await actions(page).getByLabel("Deployments", { exact: true }).fill("3");
     await act(page, "Signed an Enterprise deal", "Set plan", "Plan set.");
     await expect(page.getByText(/^Enterprise · /)).toBeVisible();
     // Suspension (AC-OPS-001-05) ended the customer's earlier session.

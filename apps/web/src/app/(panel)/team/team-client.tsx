@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 
+import { DataTable } from "@/components/data-table";
 import { Confirm, Dialog } from "@/components/dialog";
 import { toast } from "@/components/toast";
 import type { ActionResult } from "@/server/actions";
@@ -104,84 +105,82 @@ export function TeamClient(props: {
         </p>
       )}
 
-      <div className="table-wrap">
-        <table className="table">
-          <caption className="sr-only">Members</caption>
-          <thead>
-            <tr>
-              <th scope="col">Name</th>
-              <th scope="col">Email</th>
-              <th scope="col">Role</th>
-              <th scope="col">2-step sign-in</th>
-              <th scope="col">Last active</th>
-              <th scope="col">
-                <span className="sr-only">Actions</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {props.members.map((m) => (
-              <tr key={m.userId}>
-                <td className="b">{m.name}</td>
-                <td>{m.email}</td>
-                <td>
-                  {m.role === "owner" || props.readOnly ? (
-                    <span title={m.role === "owner" ? "The Owner's role is locked" : undefined}>{m.roleLabel}</span>
-                  ) : (
-                    <select
-                      className="select"
-                      aria-label={`Role of ${m.name}`}
-                      value={m.role}
-                      disabled={pending}
-                      onChange={(e) => run(() => changeRoleAction(m.userId, e.target.value as Role), `${m.name} is now ${e.target.selectedOptions[0].text}.`)}
-                    >
-                      {ASSIGNABLE.map((r) => (
-                        <option key={r.value} value={r.value}>
-                          {r.label}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                </td>
-                <td>
-                  <span className={m.twoStep ? "stt ok" : "stt mut"}>{m.twoStep ? "On" : "Off"}</span>
-                </td>
-                <td className="sm muted">{when(m.lastActive)}</td>
-                <td className="r">
-                  {m.role !== "owner" && !m.self && !props.readOnly && (
-                    <button className="btn ghost sm" onClick={() => setRemoving(m)}>
-                      Remove
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-            {props.invitations.map((i) => (
-              <tr key={i.id}>
-                <td className="muted">Invited</td>
-                <td>{i.email}</td>
-                <td>{i.roleLabel}</td>
-                <td>
-                  <span className="stt warn">Pending</span>
-                </td>
-                <td className="sm muted">Expires {when(i.expires)}</td>
-                <td className="r">
-                  {!props.readOnly && (
-                    <span className="row end gap-4">
-                      <button className="btn ghost sm" onClick={() => run(() => resendAction(i.id), `Invitation sent again to ${i.email}.`)}>
-                        Resend
-                      </button>
-                      <button className="btn ghost sm" onClick={() => run(() => cancelInviteAction(i.id), "Invitation cancelled.")}>
-                        Cancel
-                      </button>
-                    </span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <DataTable
+        rows={[...props.members.map((m) => ({ kind: "member" as const, key: m.userId, m })), ...props.invitations.map((i) => ({ kind: "invite" as const, key: i.id, i }))]}
+        noun="members"
+        caption="Members"
+        rowKey={(r) => r.key}
+        filters={[{ label: "Roles", options: [...new Set([...props.members.map((m) => m.roleLabel), ...props.invitations.map((i) => i.roleLabel)])], value: (r) => (r.kind === "member" ? r.m.roleLabel : r.i.roleLabel) }]}
+        columns={[
+          { key: "n", label: "Name", text: (r) => (r.kind === "member" ? r.m.name : "Invited"), render: (r) => (r.kind === "member" ? <span className="b">{r.m.name}</span> : <span className="muted">Invited</span>) },
+          { key: "e", label: "Email", text: (r) => (r.kind === "member" ? r.m.email : r.i.email), render: (r) => (r.kind === "member" ? r.m.email : r.i.email) },
+          {
+            key: "r",
+            label: "Role",
+            text: (r) => (r.kind === "member" ? r.m.roleLabel : r.i.roleLabel),
+            render: (r) => {
+              if (r.kind === "invite") return r.i.roleLabel;
+              const m = r.m;
+              return m.role === "owner" || props.readOnly ? (
+                <span title={m.role === "owner" ? "The Owner's role is locked" : undefined}>{m.roleLabel}</span>
+              ) : (
+                <select
+                  className="select"
+                  aria-label={`Role of ${m.name}`}
+                  value={m.role}
+                  disabled={pending}
+                  onChange={(e) => run(() => changeRoleAction(m.userId, e.target.value as Role), `${m.name} is now ${e.target.selectedOptions[0].text}.`)}
+                >
+                  {ASSIGNABLE.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              );
+            },
+          },
+          {
+            key: "t",
+            label: "2-step sign-in",
+            text: (r) => (r.kind === "member" ? (r.m.twoStep ? "On" : "Off") : "Pending"),
+            render: (r) => (r.kind === "member" ? <span className={r.m.twoStep ? "stt ok" : "stt mut"}>{r.m.twoStep ? "On" : "Off"}</span> : <span className="stt warn">Pending</span>),
+          },
+          {
+            key: "l",
+            label: "Last active",
+            sort: (r) => (r.kind === "member" ? (r.m.lastActive ? new Date(r.m.lastActive).getTime() : 0) : 0),
+            render: (r) => <span className="sm muted">{r.kind === "member" ? when(r.m.lastActive) : `Expires ${when(r.i.expires)}`}</span>,
+          },
+          {
+            key: "a",
+            label: "Actions",
+            className: "r",
+            render: (r) => {
+              if (props.readOnly) return null;
+              if (r.kind === "member") {
+                const m = r.m;
+                return m.role !== "owner" && !m.self ? (
+                  <button className="btn ghost sm" onClick={() => setRemoving(m)}>
+                    Remove
+                  </button>
+                ) : null;
+              }
+              const i = r.i;
+              return (
+                <span className="row end gap-4">
+                  <button className="btn ghost sm" onClick={() => run(() => resendAction(i.id), `Invitation sent again to ${i.email}.`)}>
+                    Resend
+                  </button>
+                  <button className="btn ghost sm" onClick={() => run(() => cancelInviteAction(i.id), "Invitation cancelled.")}>
+                    Cancel
+                  </button>
+                </span>
+              );
+            },
+          },
+        ]}
+      />
       <p className="note-p">Role changes apply immediately: the member gets the new access on their next action, without signing in again.</p>
 
       <section className="card p-20 col gap-12" aria-labelledby="perm-h">

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 
+import { DataTable } from "@/components/data-table";
 import { Confirm, Dialog } from "@/components/dialog";
 import { toast } from "@/components/toast";
 import {
@@ -132,82 +133,87 @@ export function KnowledgeClient(props: {
 
       {view === "src" && (
         <>
-          <div className="table-wrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th scope="col">Source</th>
-                  <th scope="col">Type</th>
-                  <th scope="col">Status</th>
-                  <th scope="col" className="r">Chunks</th>
-                  <th scope="col">Updated</th>
-                  <th scope="col"><span className="sr-only">Actions</span></th>
-                </tr>
-              </thead>
-              <tbody>
-                {props.sources.map((s) => {
-                  const key = !s.enabled && s.status === "ready" ? "off" : s.status;
-                  const [tone, label] = STATUS[key];
+          <DataTable
+            rows={props.sources}
+            noun="sources"
+            caption="Knowledge sources"
+            rowKey={(s) => s.id}
+            empty={
+              <div className="empty">
+                <span className="b">No sources yet</span>
+                <span className="sm muted">Upload files, crawl your website or write FAQ entries.</span>
+              </div>
+            }
+            columns={[
+              {
+                key: "n",
+                label: "Source",
+                text: (s) => s.name,
+                render: (s) => (
+                  <div className="col gap-2">
+                    <span className="b">{s.name}</span>
+                    <span className="xs muted">{s.detail}</span>
+                  </div>
+                ),
+              },
+              { key: "t", label: "Type", text: (s) => TYPE[s.type], render: (s) => TYPE[s.type] },
+              {
+                key: "s",
+                label: "Status",
+                text: (s) => STATUS[!s.enabled && s.status === "ready" ? "off" : s.status][1],
+                render: (s) => {
+                  const [tone, label] = STATUS[!s.enabled && s.status === "ready" ? "off" : s.status];
+                  return (
+                    <>
+                      <span className={`stt ${tone}`}>{label}</span>
+                      {s.status === "failed" && s.reason && <div className="xs c-danger">{s.reason}</div>}
+                    </>
+                  );
+                },
+              },
+              { key: "c", label: "Chunks", className: "r", sort: (s) => s.chunks, render: (s) => <span className="tnum">{s.chunks}</span> },
+              { key: "u", label: "Updated", sort: (s) => new Date(s.updated).getTime(), render: (s) => <span className="sm muted">{when(s.updated)}</span> },
+              {
+                key: "a",
+                label: "Actions",
+                className: "r",
+                render: (s) => {
                   const again = s.type === "website" ? "Re-crawl" : s.status === "failed" ? "Retry" : s.type === "file" ? "Replace" : null;
                   return (
-                    <tr key={s.id}>
-                      <td>
-                        <div className="col gap-2">
-                          <span className="b">{s.name}</span>
-                          <span className="xs muted">{s.detail}</span>
-                        </div>
-                      </td>
-                      <td>{TYPE[s.type]}</td>
-                      <td>
-                        <span className={`stt ${tone}`}>{label}</span>
-                        {s.status === "failed" && s.reason && <div className="xs c-danger">{s.reason}</div>}
-                      </td>
-                      <td className="r tnum">{s.chunks}</td>
-                      <td className="sm muted">{when(s.updated)}</td>
-                      <td className="r">
-                        {!ro && (
-                          <span className="row end gap-4 nw">
-                            {again && (
-                              <button
-                                className="btn ghost sm"
-                                disabled={pending || s.status === "processing" || s.status === "queued"}
-                                onClick={() => {
-                                  if (again === "Replace") {
-                                    setReplacing(s.id);
-                                    replaceInput.current?.click();
-                                  } else run(() => reprocessAction(s.id));
-                                }}
-                              >
-                                {again}
-                              </button>
-                            )}
-                            {s.status === "ready" && (
-                              <button className="btn ghost sm" aria-label={`${s.enabled ? "Disable" : "Enable"} ${s.name}`} onClick={() => run(() => setEnabledAction(s.id, !s.enabled))}>
-                                {s.enabled ? "Disable" : "Enable"}
-                              </button>
-                            )}
-                            <button className="btn ghost sm" aria-label={`Delete ${s.name}`} onClick={() => setDeleting(s)}>
-                              <i className="i i-trash" />
-                            </button>
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-                {props.sources.length === 0 && (
-                  <tr>
-                    <td colSpan={6}>
-                      <div className="empty">
-                        <span className="b">No sources yet</span>
-                        <span className="sm muted">Upload files, crawl your website or write FAQ entries.</span>
-                      </div>
-                    </td>
-                  </tr>
+                    <>
+                {!ro && (
+                  <span className="row end gap-4 nw">
+                    {again && (
+                      <button
+                        className="btn ghost sm"
+                        disabled={pending || s.status === "processing" || s.status === "queued"}
+                        onClick={() => {
+                          if (again === "Replace") {
+                            setReplacing(s.id);
+                            replaceInput.current?.click();
+                          } else run(() => reprocessAction(s.id));
+                        }}
+                      >
+                        {again}
+                      </button>
+                    )}
+                    {s.status === "ready" && (
+                      <button className="btn ghost sm" aria-label={`${s.enabled ? "Disable" : "Enable"} ${s.name}`} onClick={() => run(() => setEnabledAction(s.id, !s.enabled))}>
+                        {s.enabled ? "Disable" : "Enable"}
+                      </button>
+                    )}
+                    <button className="btn ghost sm" aria-label={`Delete ${s.name}`} onClick={() => setDeleting(s)}>
+                      <i className="i i-trash" />
+                    </button>
+                  </span>
                 )}
-              </tbody>
-            </table>
-          </div>
+
+                    </>
+                  );
+                },
+              },
+            ]}
+          />
           <p className="note-p">How a source is prepared: Hiwar extracts the text, splits it into chunks, embeds and indexes it. Changes to a page or file update only what changed.</p>
           <input
             ref={replaceInput}

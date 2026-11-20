@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { toast } from "@/components/toast";
+import { LIMIT_LABEL } from "@/lib/plan-limits";
 import { extendAction, reactivateAction, setPlanAction, suspendAction } from "../../actions";
 
 type Plan = "trial" | "starter" | "growth" | "business" | "enterprise";
@@ -61,9 +62,9 @@ export function OrgActions({ orgId, status, plan }: { orgId: string; status: str
       </div>
       {nextPlan === "enterprise" && (
         <div className="grid g5">
-          {(Object.keys(custom) as (keyof typeof custom)[]).map((k) => (
+          {LIMIT_LABEL.map(([k, l]) => (
             <div key={k} className="field">
-              <label className="label" htmlFor={`cl-${k}`}>{k}</label>
+              <label className="label" htmlFor={`cl-${k}`}>{l}</label>
               <input id={`cl-${k}`} type="number" className="input" value={custom[k]} onChange={(e) => setCustom({ ...custom, [k]: Number(e.target.value) })} />
             </div>
           ))}

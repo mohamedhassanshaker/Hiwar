@@ -1,3 +1,4 @@
+import { RecordTable } from "@/components/data-table";
 import { activeGrants, requireOperator } from "@/server/ops";
 import { openSupportAction } from "../actions";
 import { SupportClient } from "./support-client";
@@ -20,37 +21,27 @@ export default async function SupportPage() {
         access={
           <>
       <p className="sm muted">Only organizations that granted access are listed. Access is read-only, and every page viewed is in the customer&apos;s audit log.</p>
-      <div className="table-wrap">
-        <table className="table">
-          <thead>
-            <tr>
-              <th scope="col">Organization</th>
-              <th scope="col">Until</th>
-              <th scope="col">Conversations</th>
-              <th scope="col"><span className="sr-only">Open</span></th>
-            </tr>
-          </thead>
-          <tbody>
-            {grants.map((g) => (
-              <tr key={g.id}>
-                <td className="b">{g.name}</td>
-                <td>{g.expires_at.slice(0, 16)}</td>
-                <td>{g.include_conversations ? "Included" : "Not included"}</td>
-                <td className="r">
-                  <form action={openSupportAction.bind(null, g.org_id)}>
-                    <button className="btn outline sm">Open control panel</button>
-                  </form>
-                </td>
-              </tr>
-            ))}
-            {grants.length === 0 && (
-              <tr>
-                <td colSpan={4} className="muted">No organization has granted support access.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <RecordTable
+        noun="support grants"
+        caption="Support access grants"
+        columns={[{ label: "Organization" }, { label: "Until" }, { label: "Conversations" }, { label: "Open", className: "r", sort: false }]}
+        rows={grants.map((g) => ({
+          key: g.id,
+          cells: [
+            { v: <span className="b">{g.name}</span>, s: g.name },
+            { v: g.expires_at.slice(0, 16), s: g.expires_at },
+            { v: g.include_conversations ? "Included" : "Not included", s: g.include_conversations ? "Included" : "Not included" },
+            {
+              v: (
+                <form action={openSupportAction.bind(null, g.org_id)}>
+                  <button className="btn outline sm">Open control panel</button>
+                </form>
+              ),
+            },
+          ],
+        }))}
+        empty={<p className="sm muted">No organization has granted support access.</p>}
+      />
           </>
         }
       />

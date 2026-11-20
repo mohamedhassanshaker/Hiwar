@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { RecordTable } from "@/components/data-table";
 import { PLAN_LABEL } from "@/server/plans";
 import { business, healthAlerts, requireOperator } from "@/server/ops";
 import { BusinessExtras } from "./business-extras";
@@ -46,17 +47,25 @@ export default async function BusinessPage({ searchParams }: { searchParams: Pro
         <div className="card p-16 col gap-4"><span className="over">Gross margin</span><span className="num">{aed(margin)}</span><span className="xs muted">{totalRevenue ? `${Math.round((margin / totalRevenue) * 100)}%` : "No revenue yet"}</span></div>
         <div className="card p-16 col gap-4"><span className="over">AI cost per conversation</span><span className="num">{totalConversations ? aed(totalCost / totalConversations) : "—"}</span></div>
       </div>
-      <div className="table-wrap">
-        <table className="table">
-          <caption className="sr-only">Per plan</caption>
-          <thead><tr><th scope="col">Plan</th><th scope="col" className="r">AI conversations</th><th scope="col" className="r">Revenue</th><th scope="col" className="r">AI cost</th><th scope="col" className="r">Margin</th></tr></thead>
-          <tbody>
-            {data.perPlan.map((p) => (
-              <tr key={p.plan}><td>{PLAN_LABEL[p.plan]}</td><td className="r tnum">{p.conversations}</td><td className="r tnum">{aed(Number(p.revenue))}</td><td className="r tnum">{aed(Number(p.cost))}</td><td className="r tnum">{aed(Number(p.revenue) - Number(p.cost))}</td></tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <RecordTable
+        noun="plans"
+        caption="Per plan"
+        search={false}
+        columns={[{ label: "Plan" }, { label: "AI conversations", className: "r" }, { label: "Revenue", className: "r" }, { label: "AI cost", className: "r" }, { label: "Margin", className: "r" }]}
+        rows={data.perPlan.map((p) => {
+          const m = Number(p.revenue) - Number(p.cost);
+          return {
+            key: p.plan,
+            cells: [
+              { v: PLAN_LABEL[p.plan], s: PLAN_LABEL[p.plan] },
+              { v: <span className="tnum">{p.conversations}</span>, s: p.conversations },
+              { v: <span className="tnum">{aed(Number(p.revenue))}</span>, s: Number(p.revenue) },
+              { v: <span className="tnum">{aed(Number(p.cost))}</span>, s: Number(p.cost) },
+              { v: <span className="tnum">{aed(m)}</span>, s: m },
+            ],
+          };
+        })}
+      />
       <section className="card p-20 col gap-8">
         <h2 className="h2">Service health, last 24 hours</h2>
         <div className="grid g5 sm">
@@ -67,24 +76,27 @@ export default async function BusinessPage({ searchParams }: { searchParams: Pro
           <span>Double replies: {h?.double_replies ?? 0}</span>
         </div>
       </section>
-      <div className="table-wrap">
-        <table className="table">
-          <caption className="sr-only">Organizations by margin</caption>
-          <thead><tr><th scope="col">Organization</th><th scope="col">Plan</th><th scope="col" className="r">AI conversations</th><th scope="col" className="r">AI cost</th><th scope="col" className="r">Revenue</th><th scope="col" className="r">Margin</th></tr></thead>
-          <tbody>
-            {data.perOrg.map((o) => (
-              <tr key={o.id}>
-                <td><Link href={`/ops/orgs/${o.id}`}>{o.name}</Link></td>
-                <td>{PLAN_LABEL[o.plan]}</td>
-                <td className="r tnum">{o.conversations}</td>
-                <td className="r tnum">{aed(Number(o.cost))}</td>
-                <td className="r tnum">{aed(Number(o.revenue))}</td>
-                <td className={Number(o.revenue) - Number(o.cost) < 0 ? "r tnum c-danger" : "r tnum"}>{aed(Number(o.revenue) - Number(o.cost))}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <RecordTable
+        noun="organizations"
+        caption="Organizations by margin"
+        columns={[{ label: "Organization" }, { label: "Plan" }, { label: "AI conversations", className: "r" }, { label: "AI cost", className: "r" }, { label: "Revenue", className: "r" }, { label: "Margin", className: "r" }]}
+        filters={[{ label: "Plan", options: Object.values(PLAN_LABEL) }]}
+        rows={data.perOrg.map((o) => {
+          const m = Number(o.revenue) - Number(o.cost);
+          return {
+            key: o.id,
+            filter: [PLAN_LABEL[o.plan]],
+            cells: [
+              { v: <Link href={`/ops/orgs/${o.id}`}>{o.name}</Link>, s: o.name },
+              { v: PLAN_LABEL[o.plan], s: PLAN_LABEL[o.plan] },
+              { v: <span className="tnum">{o.conversations}</span>, s: o.conversations },
+              { v: <span className="tnum">{aed(Number(o.cost))}</span>, s: Number(o.cost) },
+              { v: <span className="tnum">{aed(Number(o.revenue))}</span>, s: Number(o.revenue) },
+              { v: <span className={m < 0 ? "tnum c-danger" : "tnum"}>{aed(m)}</span>, s: m },
+            ],
+          };
+        })}
+      />
       <BusinessExtras />
     </>
   );

@@ -25,10 +25,10 @@ async function smallGrowth(browser: Browser, admin: Operator, allowance: number)
   const plans = admin.page;
   await plans.goto("/ops/plans");
   const growth = plans.locator("section").filter({ has: plans.getByRole("heading", { name: "Growth", exact: true }) });
-  const previous = await growth.getByLabel("aiConversations", { exact: true }).inputValue();
+  const previous = await growth.getByLabel("AI conversations a month", { exact: true }).inputValue();
   const save = async (value: string, reason: string) => {
     await plans.goto("/ops/plans");
-    await growth.getByLabel("aiConversations", { exact: true }).fill(value);
+    await growth.getByLabel("AI conversations a month", { exact: true }).fill(value);
     await growth.getByPlaceholder("Reason for the change").fill(reason);
     await growth.getByRole("button", { name: "Save version" }).click();
     await expect(plans.getByRole("status").filter({ hasText: /^Growth version \d+ saved\.$/ })).toBeVisible();
