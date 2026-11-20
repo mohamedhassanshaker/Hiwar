@@ -88,8 +88,9 @@ test.describe("ORG-003 Audit log", () => {
     const { page } = owner;
     await page.goto("/audit");
     const table = page.getByRole("table", { name: "Audit log entries" });
-    await expect(table.getByRole("button")).toHaveCount(0);
-    await expect(table.getByRole("textbox")).toHaveCount(0);
+    // The column headers sort the view; no control in an entry's row can change it.
+    await expect(table.locator("tbody").getByRole("button")).toHaveCount(0);
+    await expect(table.locator("tbody").getByRole("textbox")).toHaveCount(0);
     for (const method of ["DELETE", "PUT", "PATCH", "POST"] as const) {
       const response = await page.request.fetch("/api/audit/export", { method });
       expect(response.status(), method).toBeGreaterThanOrEqual(400);
@@ -119,6 +120,7 @@ test.describe("ORG-003 Audit log", () => {
     const edit = page.getByRole("dialog", { name: /Look up an order|Edit/ });
     await edit.getByLabel("Secret value").fill(second);
     await edit.getByRole("button", { name: /Save/ }).click();
+    await expect(page.getByRole("status").filter({ hasText: "Look up an order saved." })).toBeVisible();
 
     await page.goto("/audit?area=Tools&q=");
     const row = page.getByRole("row").filter({ hasText: "Look up an order" }).first();

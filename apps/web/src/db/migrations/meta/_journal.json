@@ -57,6 +57,13 @@
       "when": 1795061487991,
       "tag": "0007_ai_identity_views",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795155799711,
+      "tag": "0008_widget_load_errors",
+      "breakpoints": true
     }
   ]
 }

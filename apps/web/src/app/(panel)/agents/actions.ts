@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import type { TurnLine } from "@/server/agent-service";
 import { act } from "@/server/actions";
-import { createAgent, createHttpTool, duplicateAgent, publish, rollBack, saveDraft, testTurn } from "@/server/agents";
+import { createAgent, createHttpTool, updateHttpTool, duplicateAgent, publish, rollBack, saveDraft, testTurn } from "@/server/agents";
 import { apiMember } from "@/server/session";
 
 const write = () => apiMember("manage_agents", { write: true });
@@ -50,6 +50,12 @@ export async function addHttpToolAction(input: unknown) {
     const id = await createHttpTool(await write(), input);
     done();
     return id;
+  });
+}
+export async function updateHttpToolAction(toolId: string, input: unknown) {
+  return act(async () => {
+    await updateHttpTool(await write(), toolId, input);
+    done();
   });
 }
 export async function testTurnAction(id: string, transcript: TurnLine[], editing: unknown) {

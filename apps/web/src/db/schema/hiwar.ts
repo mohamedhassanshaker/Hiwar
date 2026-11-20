@@ -629,6 +629,24 @@ export const operatorActions = pgTable("operator_actions", {
   createdAt: createdAt(),
 });
 
+/**
+ * A widget frame that could not load (OPS-004 FR-003): an unknown or disabled deployment key, or
+ * a page whose origin the deployment does not list, so the browser blocks the frame. Figures
+ * only: the embedding page is kept as its origin, never the full address.
+ */
+export const widgetLoadErrors = pgTable(
+  "widget_load_errors",
+  {
+    id: id(),
+    orgId: uuid("org_id").references(() => organizations.id, { onDelete: "cascade" }),
+    deploymentId: uuid("deployment_id").references(() => deployments.id, { onDelete: "cascade" }),
+    reason: text("reason").$type<"unknown_key" | "origin_not_allowed">().notNull(),
+    origin: text("origin"),
+    createdAt: createdAt(),
+  },
+  (t) => [index("widget_load_errors_created_idx").on(t.createdAt)],
+);
+
 export const salesRequests = pgTable("sales_requests", {
   id: id(),
   orgId: uuid("org_id"),

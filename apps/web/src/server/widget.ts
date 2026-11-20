@@ -17,6 +17,15 @@ export type WidgetLine =
   | { kind: "status"; status: "waiting" | "joined" | "left" | "cancelled" | "reopened"; at: string }
   | { kind: "notice"; text: string; at: string };
 
+/** Record a widget frame the browser will not show (OPS-004 FR-003). A failed write is logged, never shown to the visitor. */
+export async function recordWidgetLoadError(row: { orgId: string | null; deploymentId: string | null; reason: "unknown_key" | "origin_not_allowed"; origin: string | null }): Promise<void> {
+  try {
+    await db.insert(schema.widgetLoadErrors).values(row);
+  } catch (problem) {
+    console.error("widget load error not recorded", problem);
+  }
+}
+
 export async function widgetContext(key: string) {
   const deployment = await deploymentByKey(key);
   if (!deployment) throw new Refused("Unknown widget key.", 404);

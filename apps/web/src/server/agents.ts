@@ -260,12 +260,63 @@ export async function createHttpTool(member: MemberContext, input: unknown): Pro
   return row.id;
 }
 
+/**
+ * Change an HTTP tool. An empty secret value keeps the stored one; a new value replaces it and
+ * the audit entry says "value rotated · not shown" (ORG-003 AC-07). Values are never logged.
+ */
+export async function updateHttpTool(member: MemberContext, toolId: string, input: unknown): Promise<void> {
+  const tool = await db.query.httpTools.findFirst({ where: and(eq(schema.httpTools.id, toolId), eq(schema.httpTools.orgId, member.org.id)) });
+  if (!tool) throw new Refused("This tool does not exist.", 404);
+  const data = httpToolSchema.parse(input);
+  const stored: Record<string, string> = tool.secrets ? JSON.parse(openText(tool.secrets)) : {};
+  const [name, value] = Object.entries(data.secrets)[0] ?? ["", ""];
+  let secrets = stored;
+  let secretChange: string | null = null;
+  if (!name) {
+    if (Object.keys(stored).length) secretChange = "secret removed";
+    secrets = {};
+  } else if (value) {
+    secrets = { [name]: value };
+    secretChange = "value rotated · not shown";
+  } else if (!(name in stored)) {
+    throw new Refused(`Enter the secret value for ${name}.`, 422);
+  }
+  const config = { endpoint: data.endpoint, method: data.method, headers: data.headers, inputSchema: data.inputSchema };
+  const changed = [
+    data.name !== tool.name && "name",
+    data.description !== tool.description && "description",
+    data.access !== tool.access && "access",
+    data.endpoint !== tool.config.endpoint && "endpoint",
+    data.method !== tool.config.method && "method",
+    JSON.stringify(data.inputSchema) !== JSON.stringify(tool.config.inputSchema) && "input schema",
+  ].filter(Boolean) as string[];
+  if (!changed.length && !secretChange) return;
+  await db
+    .update(schema.httpTools)
+    .set({ name: data.name, description: data.description, access: data.access, config, secrets: Object.keys(secrets).length ? sealText(JSON.stringify(secrets)) : null })
+    .where(eq(schema.httpTools.id, tool.id));
+  const change = [changed.length ? `${changed.join(", ")} changed` : null, secretChange].filter(Boolean).join(" · ");
+  await audit({ orgId: member.org.id, actorUserId: member.user.id, actorName: member.user.name, area: "Tools", action: "Changed an HTTP tool", item: data.name, change });
+}
+
 /** Tool definitions for the agent service, without secret values for the client. */
 export async function toolCatalogue(orgId: string) {
   const http = await db.query.httpTools.findMany({ where: eq(schema.httpTools.orgId, orgId) });
   return [
     ...BUILTIN_TOOLS.map((t) => ({ key: t.key, name: t.name, description: t.description, access: t.access, kind: "builtin" as const })),
-    ...http.map((t) => ({ key: `http_${t.id.replace(/-/g, "").slice(0, 16)}`, id: t.id, name: t.name, description: t.description, access: t.access, kind: "http" as const })),
+    ...http.map((t) => ({
+      key: `http_${t.id.replace(/-/g, "").slice(0, 16)}`,
+      id: t.id,
+      name: t.name,
+      description: t.description,
+      access: t.access,
+      kind: "http" as const,
+      endpoint: t.config.endpoint,
+      method: t.config.method,
+      inputSchema: t.config.inputSchema,
+      // Header names only, for the edit form; the values stay sealed on the server.
+      secretNames: t.secrets ? Object.keys(JSON.parse(openText(t.secrets)) as Record<string, string>) : [],
+    })),
   ];
 }
 

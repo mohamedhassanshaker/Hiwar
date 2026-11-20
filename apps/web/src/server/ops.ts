@@ -284,7 +284,7 @@ export async function business(days: 7 | 30 | 90) {
         - coalesce((SELECT sum(u.cost_aed) FROM usage_events u WHERE u.org_id = o.id AND u.occurred_at >= ${from}), 0)) ASC LIMIT 200`)
   ).rows;
   const [health] = (
-    await db.execute<{ p50: number | null; p95: number | null; ai_failures: number; ai_turns: number; ingestion_failures: number; double_replies: number }>(sql`
+    await db.execute<{ p50: number | null; p95: number | null; ai_failures: number; ai_turns: number; ingestion_failures: number; double_replies: number; widget_load_errors: number }>(sql`
       WITH pairs AS (
         SELECT extract(epoch FROM (SELECT min(m2.created_at) FROM messages m2 WHERE m2.conversation_id = m.conversation_id AND m2.kind = 'ai' AND m2.created_at > m.created_at) - m.created_at) AS s
         FROM messages m WHERE m.kind = 'visitor' AND m.created_at > now() - interval '24 hours')
@@ -292,6 +292,7 @@ export async function business(days: 7 | 30 | 90) {
         (SELECT count(*) FROM messages WHERE kind = 'event' AND text LIKE 'The AI could not reply%' AND created_at > now() - interval '24 hours')::int AS ai_failures,
         (SELECT count(*) FROM messages WHERE kind = 'ai' AND created_at > now() - interval '24 hours')::int AS ai_turns,
         (SELECT count(*) FROM sources WHERE status = 'failed' AND updated_at > now() - interval '24 hours')::int AS ingestion_failures,
+        (SELECT count(*) FROM widget_load_errors WHERE created_at > now() - interval '24 hours')::int AS widget_load_errors,
         (SELECT count(*) FROM (SELECT kind, lag(kind) OVER (PARTITION BY conversation_id ORDER BY created_at) AS prev FROM messages
            WHERE kind IN ('visitor','ai','staff') AND created_at > now() - interval '24 hours') x WHERE kind = 'ai' AND prev = 'staff')::int AS double_replies
       FROM pairs WHERE s IS NOT NULL`)
@@ -307,7 +308,14 @@ export async function healthAlerts(): Promise<string[]> {
   ).rows;
   if (cost.avg && Number(cost.avg) > 0.3) alerts.push(`AI cost per conversation is AED ${Number(cost.avg).toFixed(2)} over 7 days (alert above AED 0.30).`);
   const { health } = await business(7);
-  if (health && health.ai_turns > 0 && health.ai_failures / (health.ai_turns + health.ai_failures) > 0.02) alerts.push("Model error rate is above 2%.");
+  // "Above 2% for 5 minutes": the rate over the last 5 minutes, so a burst of errors is not diluted by a day of turns.
+  const [recent] = (
+    await db.execute<{ failures: number; turns: number }>(sql`
+      SELECT count(*) FILTER (WHERE kind = 'event' AND text LIKE 'The AI could not reply%')::int AS failures,
+        count(*) FILTER (WHERE kind = 'ai')::int AS turns
+      FROM messages WHERE created_at > now() - interval '5 minutes' AND kind IN ('event', 'ai')`)
+  ).rows;
+  if (recent.failures > 0 && recent.failures / (recent.turns + recent.failures) > 0.02) alerts.push("Model error rate is above 2%.");
   if (health && health.double_replies > 0) alerts.push(`${health.double_replies} double replies in the last 24 hours.`);
   return alerts;
 }

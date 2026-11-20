@@ -68,10 +68,11 @@ export default async function BusinessPage({ searchParams }: { searchParams: Pro
       />
       <section className="card p-20 col gap-8">
         <h2 className="h2">Service health, last 24 hours</h2>
-        <div className="grid g5 sm">
+        <div className="grid g3 sm">
           <span>First reply median: {h?.p50 != null ? `${Number(h.p50).toFixed(1)} s` : "—"}</span>
           <span>95th percentile: {h?.p95 != null ? `${Number(h.p95).toFixed(1)} s` : "—"}</span>
           <span>Model errors: {h ? `${h.ai_failures} of ${h.ai_turns + h.ai_failures}` : "—"}</span>
+          <span>Widget load errors: {h?.widget_load_errors ?? 0}</span>
           <span>Ingestion failures: {h?.ingestion_failures ?? 0}</span>
           <span>Double replies: {h?.double_replies ?? 0}</span>
         </div>

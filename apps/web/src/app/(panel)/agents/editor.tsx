@@ -10,6 +10,7 @@ import type { AgentConfig, NoPersonBehaviour, ToolPolicy } from "@/db/schema";
 import type { TurnLine, TurnResult } from "@/server/agent-service";
 import {
   addHttpToolAction,
+  updateHttpToolAction,
   duplicateAction,
   newAgentAction,
   publishAction,
@@ -50,7 +51,7 @@ interface Props {
   liveConfig: string;
   versions: { number: number; publishedAt: string; publishedBy: string }[];
   sources: { id: string; name: string; type: string; status: string; enabled: boolean; chunks: number; detail: string }[];
-  tools: { key: string; name: string; description: string; access: "read" | "write"; kind: "builtin" | "http" }[];
+  tools: Tool[];
 }
 
 function Switch({ on, label, onChange, disabled }: { on: boolean; label: string; onChange: (v: boolean) => void; disabled?: boolean }) {
@@ -78,6 +79,7 @@ export function AgentEditor(props: Props) {
   const [problem, setProblem] = useState<{ text: string; upgrade?: boolean } | null>(null);
   const [rollTo, setRollTo] = useState<number | null>(null);
   const [addingTool, setAddingTool] = useState(false);
+  const [editingTool, setEditingTool] = useState<Tool | null>(null);
   const dirty = JSON.stringify(config) !== saved;
   const differsFromLive = props.liveConfig === "null" || JSON.stringify(config) !== props.liveConfig;
   const nextVersion = (props.versions[0]?.number ?? 0) + 1;
@@ -286,6 +288,11 @@ export function AgentEditor(props: Props) {
                             ))}
                           </select>
                         )}
+                        {t.kind === "http" && !ro && (
+                          <button className="btn ghost sm" aria-label={`Edit ${t.name}`} onClick={() => setEditingTool(t)}>
+                            Edit
+                          </button>
+                        )}
                         <Switch on={setting.enabled} label={`Enable ${t.name}`} disabled={ro} onChange={(v) => update({ ...setting, enabled: v, policy: t.access === "write" ? setting.policy ?? "staff_approval" : undefined })} />
                       </span>
                     </Setting>
@@ -423,6 +430,21 @@ export function AgentEditor(props: Props) {
           })
         }
       />
+      {editingTool && (
+        <HttpToolDialog
+          key={editingTool.key}
+          open
+          tool={editingTool}
+          onClose={() => setEditingTool(null)}
+          onSave={(input) =>
+            run(() => updateHttpToolAction(editingTool.id!, input), () => {
+              setEditingTool(null);
+              toast(`${editingTool.name} saved. Published versions use the change at once.`);
+              router.refresh();
+            })
+          }
+        />
+      )}
       <HttpToolDialog
         open={addingTool}
         onClose={() => setAddingTool(false)}
@@ -570,8 +592,26 @@ function TestConsole({ agentId, config }: { agentId: string; config: AgentConfig
   );
 }
 
-function HttpToolDialog({ open, onClose, onSave }: { open: boolean; onClose: () => void; onSave: (input: unknown) => void }) {
-  const [form, setForm] = useState({ name: "", description: "", access: "read", endpoint: "https://", method: "POST", schema: '{"type":"object","properties":{}}', secretName: "", secretValue: "" });
+type Tool = {
+  key: string;
+  id?: string;
+  name: string;
+  description: string;
+  access: "read" | "write";
+  kind: "builtin" | "http";
+  endpoint?: string;
+  method?: string;
+  inputSchema?: Record<string, unknown>;
+  secretNames?: string[];
+};
+
+/** Adds an HTTP tool, or edits `tool`. When editing, an empty secret value keeps the stored one. */
+function HttpToolDialog({ open, tool, onClose, onSave }: { open: boolean; tool?: Tool; onClose: () => void; onSave: (input: unknown) => void }) {
+  const [form, setForm] = useState(
+    tool
+      ? { name: tool.name, description: tool.description, access: tool.access as string, endpoint: tool.endpoint ?? "https://", method: tool.method ?? "POST", schema: JSON.stringify(tool.inputSchema ?? { type: "object", properties: {} }), secretName: tool.secretNames?.[0] ?? "", secretValue: "" }
+      : { name: "", description: "", access: "read", endpoint: "https://", method: "POST", schema: '{"type":"object","properties":{}}', secretName: "", secretValue: "" },
+  );
   const [schemaError, setSchemaError] = useState<string | null>(null);
   const field = (key: keyof typeof form) => ({ value: form[key], onChange: (e: { target: { value: string } }) => setForm({ ...form, [key]: e.target.value }) });
   const submit = () => {
@@ -595,7 +635,13 @@ function HttpToolDialog({ open, onClose, onSave }: { open: boolean; onClose: () 
     });
   };
   return (
-    <Dialog open={open} title="Add an HTTP tool" description="The tool editor takes a name, a description for the model, an input schema, an endpoint, a method, headers and secrets." onClose={onClose} footer={<><button className="btn outline" onClick={onClose}>Cancel</button><button className="btn" onClick={submit}>Add tool</button></>}>
+    <Dialog
+      open={open}
+      title={tool ? `Edit ${tool.name}` : "Add an HTTP tool"}
+      description={tool ? "Leave the secret value empty to keep the stored one. Secrets are never shown after saving." : "The tool editor takes a name, a description for the model, an input schema, an endpoint, a method, headers and secrets."}
+      onClose={onClose}
+      footer={<><button className="btn outline" onClick={onClose}>Cancel</button><button className="btn" onClick={submit}>{tool ? "Save tool" : "Add tool"}</button></>}
+    >
       <div className="field"><label className="label" htmlFor="ht-n">Name</label><input id="ht-n" className="input" {...field("name")} /></div>
       <div className="field"><label className="label" htmlFor="ht-d">Description for the model</label><textarea id="ht-d" className="textarea" rows={2} {...field("description")} /></div>
       <div className="grid g2">
@@ -606,7 +652,7 @@ function HttpToolDialog({ open, onClose, onSave }: { open: boolean; onClose: () 
       <div className="field"><label className="label" htmlFor="ht-s">Input schema (JSON)</label><textarea id="ht-s" className="textarea mono" rows={3} {...field("schema")} />{schemaError && <span className="err">{schemaError}</span>}</div>
       <div className="grid g2">
         <div className="field"><label className="label" htmlFor="ht-sn">Secret header name</label><input id="ht-sn" className="input" placeholder="Authorization" {...field("secretName")} /></div>
-        <div className="field"><label className="label" htmlFor="ht-sv">Secret value</label><input id="ht-sv" className="input" type="password" autoComplete="off" {...field("secretValue")} /></div>
+        <div className="field"><label className="label" htmlFor="ht-sv">Secret value</label><input id="ht-sv" className="input" type="password" autoComplete="off" placeholder={tool?.secretNames?.length ? "Stored · not shown" : undefined} {...field("secretValue")} /></div>
       </div>
     </Dialog>
   );

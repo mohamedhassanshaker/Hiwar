@@ -16,13 +16,14 @@ test.describe("OPS-004 AI cost, margin and service health", () => {
   test.describe.configure({ mode: "serial" });
   let admin: Operator;
   let customer: Account & { org: string };
+  let key: string;
 
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(240_000);
     admin = await operator(browser, "platform_admin");
     customer = await signUpOwner(browser);
     await choosePlan(customer.page, "Starter");
-    const { key } = await readyWorkspace(customer.page);
+    ({ key } = await readyWorkspace(customer.page));
     // An expensive conversation: the model stand-in reports a large completion.
     const visitor = await openWidget(browser, key);
     await say(visitor, "Tell me everything about the menu [[tokens:2000000]]");
@@ -70,13 +71,6 @@ test.describe("OPS-004 AI cost, margin and service health", () => {
   });
 
   test("AC-OPS-004-05: a model error rate above 2% alerts Platform admins", async ({ browser }) => {
-    const { key } = await (async () => {
-      await customer.page.goto("/deployments");
-      const link = customer.page.getByRole("link", { name: /Order site/ }).first();
-      await link.click();
-      const k = (await customer.page.getByLabel("Embed snippet").textContent())!.match(/pk_dep_\w+/)![0];
-      return { key: k };
-    })();
     for (let i = 0; i < 3; i += 1) {
       const visitor = await openWidget(browser, key);
       await say(visitor, `Hello [[fail]] ${i}`);

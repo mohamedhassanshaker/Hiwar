@@ -115,7 +115,7 @@ test("AC-ORG-001-05: a removed member loses access at once, their conversations 
   await page.getByRole("row").filter({ hasText: seed.khalid.email }).getByRole("button", { name: "Remove" }).click();
   await page.getByRole("dialog", { name: "Remove Khalid Saeed?" }).getByRole("button", { name: "Remove member" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Khalid Saeed was removed." })).toBeVisible();
-  await expect(page.getByText(`${before - 1} of`, { exact: false })).toBeVisible();
+  await expect(page.getByText(new RegExp(String.raw`\b${before - 1} of \d+ seats used\.`))).toBeVisible();
   await seed.khalid.page.goto("/conversations");
   await expect(seed.khalid.page).not.toHaveURL(/\/conversations/);
   const thread = await openConversation(page, "pending", "Rashid Al Mazrouei");
