@@ -12,9 +12,9 @@
 .offline-banner{background:#fdeceb;color:#c8261d;font-size:13px;padding:6px 16px;text-align:center}
 .side-nav{width:248px;flex:none;background:#1b1f4b;color:#fff;display:flex;flex-direction:column;gap:14px;padding:18px 14px;position:sticky;top:0;height:100vh;overflow:auto}
 .side-nav .nav-close{display:none;color:#fff;align-self:flex-end}
-.nav-sub{color:#aeb3d6}
+.nav-sub{color:var(--nav-sub)}
 .org-chip,.user-chip{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:rgba(255,255,255,.06)}
-.nav-group{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#8d93c2;padding:4px 10px}
+.nav-group{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--nav-group);padding:4px 10px}
 .nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#dfe2f0;text-decoration:none;font-size:14px;min-height:36px}
 .nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
 .nav-item.on{background:#4338ca;color:#fff}
@@ -48,17 +48,18 @@
 .bubble-ai{background:#fff;align-self:flex-start}
 .bubble-person{background:#eef0ff;border-color:#c7cbf7;align-self:flex-start}
 .bubble-me{background:#1b1f4b;color:#fff;border-color:#1b1f4b;align-self:flex-end}
-.dropzone{border:1.5px dashed #c9d1dd;border-radius:12px;padding:24px;cursor:pointer;text-align:center;background:#fbfcfd}
+.dropzone{border:1.5px dashed var(--border-strong);border-radius:12px;padding:24px;cursor:pointer;text-align:center;background:#fbfcfd}
 .inbox .cv{background:#fff}
 .inbox .thread{max-height:none;height:calc(100vh - 360px);min-height:320px}
 .mobile-only{display:none}
 @media (max-width:767px){
   .mobile-only{display:inline-flex}
   .inbox>*{flex-basis:100% !important}
-  .inbox-list>.center,.inbox-list>aside[aria-label="Conversation details"]{display:none}
-  .inbox-thread>aside{display:none}
-  .inbox-details>aside[aria-label="Conversation list"],.inbox-details>.center{display:none}
-  .inbox-details>aside[aria-label="Conversation details"]{display:flex}
+  /* One view at a time (INB-001 FR-016). Qualified with .split3 so these outrank .split3>.rail and .split3>.center. */
+  .split3.inbox-list>.center,.split3.inbox-list>aside[aria-label="Conversation details"]{display:none}
+  .split3.inbox-thread>aside{display:none}
+  .split3.inbox-details>aside[aria-label="Conversation list"],.split3.inbox-details>.center{display:none}
+  .split3.inbox-details>aside[aria-label="Conversation details"]{display:flex}
 }
 .legend-dot{width:10px;height:10px;border-radius:2px;display:inline-block}
 .grid.g5{grid-template-columns:repeat(auto-fit,minmax(min(190px,100%),1fr))}

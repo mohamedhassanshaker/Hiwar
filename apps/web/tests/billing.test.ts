@@ -3,7 +3,7 @@ import { afterAll, describe, expect, it } from "vitest";
 
 import { db, pool, schema } from "@/db";
 import { changePlan } from "@/server/billing";
-import { allowance, countAiConversation, usedThisPeriod } from "@/server/metering";
+import { allowance, checkAlerts, countAiConversation, usedThisPeriod } from "@/server/metering";
 import { ensurePlans, latestPlanVersion, periodOf } from "@/server/plans";
 import { conversation, world } from "./fixtures";
 
@@ -28,6 +28,16 @@ async function use(w: Awaited<ReturnType<typeof world>>, count: number) {
 }
 
 describe("BIL-001 allowance at the limit", () => {
+  it("AC-DEP-002-07: the concurrent limit counts the other open conversations, not the one asking", async () => {
+    const w = await world();
+    const org = await onPlan(w, "growth");
+    const [deployment] = await db.update(schema.deployments).set({ settings: { ...w.deployment.settings, concurrentLimit: 1 } }).where(eq(schema.deployments.id, w.deployment.id)).returning();
+    const first = await conversation(w);
+    expect(await allowance(org, deployment, first.id)).toMatchObject({ allowed: true });
+    const second = await conversation(w);
+    expect(await allowance(org, deployment, second.id)).toMatchObject({ allowed: false, reason: "concurrent" });
+  });
+
   it("AC-BIL-001-05: past the plan limit with the default behaviour the AI stops and routes to a person", async () => {
     const w = await world();
     const org = await onPlan(w, "starter");
@@ -47,6 +57,22 @@ describe("BIL-001 allowance at the limit", () => {
     }
     expect((await usedThisPeriod(w.org.id)).overageAed).toBe(2);
     expect(await allowance(org, w.deployment)).toMatchObject({ allowed: false, reason: "overage cap" });
+  });
+
+  it("AC-BIL-001-08: reaching the overage cap notifies Owner and Billing once per period", async () => {
+    const w = await world(["owner", "billing", "support_agent"]);
+    const org = await onPlan(w, "starter", { limitBehaviour: "overage", overageCapAed: "2.00" });
+    for (let i = 0; i < 2; i += 1) {
+      const c = await conversation(w);
+      await db.insert(schema.usageEvents).values({ orgId: w.org.id, deploymentId: w.deployment.id, conversationId: c.id, period: periodOf(), overage: true, amountAed: "1.00" });
+    }
+    await checkAlerts(org);
+    await checkAlerts(org);
+    const notices = await db.query.notifications.findMany({ where: eq(schema.notifications.orgId, w.org.id) });
+    const cap = notices.filter((n) => n.title === "The monthly overage cap of AED 2.00 is reached");
+    expect(cap).toHaveLength(1);
+    expect(cap[0].roles).toEqual(expect.arrayContaining(["owner", "billing"]));
+    expect(cap[0].roles).not.toContain("support_agent");
   });
 
   it("AC-BIL-001-17: new chats pause after a failed payment's 7-day grace period", async () => {

@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { db, schema } from "@/db";
-import { can, Forbidden, type Capability, type Role } from "./authz";
+import { can, Forbidden, homeFor, type Capability, type Role } from "./authz";
 import { hashToken, newToken } from "./crypto";
 import { env } from "./env";
 
@@ -95,7 +95,8 @@ export async function requireMember(capability?: Capability, next = "/conversati
     if (session.org.require2fa && !session.user.totpEnabledAt) redirect("/two-step/setup");
     if (session.org.status === "suspended") redirect("/suspended");
   }
-  if (capability && !can(session.role, capability)) redirect("/conversations?denied=1");
+  // ORG-002 FR-006: a refused request lands on a screen the role may open, never on another refusal.
+  if (capability && !can(session.role, capability)) redirect(`${homeFor(session.role)}?denied=1`);
   return session as MemberContext;
 }
 

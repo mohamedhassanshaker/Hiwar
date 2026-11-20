@@ -68,26 +68,37 @@ function pct(part: number, whole: number): number {
   return whole ? Math.round((part / whole) * 100) : 0;
 }
 
+/**
+ * FR-001: the range is the last `range` calendar days including today, so the KPIs, the daily
+ * chart and the table cover the same days. Days start at midnight UTC, as the database's day does.
+ */
+export function rangeStart(range: Range, now = new Date()): Date {
+  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  return new Date(today - (range - 1) * 86_400_000);
+}
+
 export async function dashboard(orgId: string, range: Range, dimension: Dimension) {
   const to = new Date();
-  const from = new Date(to.getTime() - range * 86_400_000);
+  const from = rangeStart(range, to);
   const prevFrom = new Date(from.getTime() - range * 86_400_000);
   const [now, prev] = await Promise.all([kpis(orgId, from, to), kpis(orgId, prevFrom, from)]);
 
-  const delta = (a: number, b: number, unit: "%" | "points" | "s") => {
+  // FR-001: every KPI compares with the previous period of the same length.
+  const delta = (a: number, b: number, unit: "%" | "points") => {
     if (unit === "%") return b ? `${Math.round(((a - b) / b) * 100)}% vs the period before` : "No earlier data";
-    if (unit === "points") return `${Math.abs(a - b)} points ${a >= b ? "up" : "down"}`;
-    return "";
+    return `${Math.abs(a - b)} points ${a >= b ? "up" : "down"} vs the period before`;
   };
+  const faster = (a: number | null, b: number | null) =>
+    a === null || b === null ? "No earlier data" : `${Math.round(Math.abs(a - b))} s ${a <= b ? "faster" : "slower"} than the period before`;
   const resolvedPct = pct(now.resolved, now.decided);
   const reachedPct = pct(now.reached, now.conversations);
   const kpiCards = [
     { k: "Conversations", v: now.conversations.toLocaleString("en-US"), d: delta(now.conversations, prev.conversations, "%") },
     { k: "Resolved by the AI", v: `${resolvedPct}%`, d: delta(resolvedPct, pct(prev.resolved, prev.decided), "points") },
     { k: "Reached a person", v: `${reachedPct}%`, d: delta(reachedPct, pct(prev.reached, prev.conversations), "points") },
-    { k: "First reply", v: duration(now.first_reply), d: "AI and people together" },
-    { k: "Wait for a person", v: duration(now.wait), d: "Median, staffed hours" },
-    { k: "Double replies", v: String(now.double_replies), d: "AI and person in one turn" },
+    { k: "First reply", v: duration(now.first_reply), d: `AI and people together · ${faster(now.first_reply, prev.first_reply)}` },
+    { k: "Wait for a person", v: duration(now.wait), d: `Median, staffed hours · ${faster(now.wait, prev.wait)}` },
+    { k: "Double replies", v: String(now.double_replies), d: `AI and person in one turn · ${now.double_replies - prev.double_replies >= 0 ? "+" : ""}${now.double_replies - prev.double_replies} vs the period before` },
   ];
 
   const days = await rows<{ day: string; ai: number; person: number }>(sql`
@@ -149,7 +160,7 @@ export async function dashboard(orgId: string, range: Range, dimension: Dimensio
 
 /** FR-013: the CSV export of one range, one row per conversation. */
 export async function exportRows(orgId: string, range: Range) {
-  const from = new Date(Date.now() - range * 86_400_000);
+  const from = rangeStart(range);
   return rows<Record<string, string>>(sql`
     SELECT c.started_at::text AS started, dp.name AS deployment, (SELECT a.draft->>'name' FROM agents a WHERE a.id = c.agent_id) AS agent,
       c.visitor->>'language' AS language, c.state::text AS state, c.handed_over::text AS reached_a_person,

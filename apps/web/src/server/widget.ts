@@ -14,7 +14,8 @@ import { currentConversation, deploymentByKey, sendTranscript, servedVersion, wi
 export type WidgetLine =
   | { kind: "visitor" | "ai"; text: string; at: string; citations?: string[] }
   | { kind: "person"; text: string; name: string; at: string }
-  | { kind: "status"; status: "waiting" | "joined" | "left" | "cancelled" | "reopened"; at: string };
+  | { kind: "status"; status: "waiting" | "joined" | "left" | "cancelled" | "reopened"; at: string }
+  | { kind: "notice"; text: string; at: string };
 
 export async function widgetContext(key: string) {
   const deployment = await deploymentByKey(key);
@@ -60,6 +61,8 @@ export async function widgetState(key: string, token: string) {
       lines.push({ kind: m.kind, text: m.text, at: m.createdAt.toISOString(), citations: base.appearance.citations ? (m.meta.citations ?? []).map((x) => x.name) : undefined });
     } else if (m.kind === "staff") {
       lines.push({ kind: "person", text: m.text, name: (m.authorName ?? "Team").split(" ")[0], at: m.createdAt.toISOString() });
+    } else if (m.kind === "event" && m.meta.visitorNotice) {
+      lines.push({ kind: "notice", text: m.meta.visitorNotice, at: m.createdAt.toISOString() });
     }
   }
   for (const e of events) {

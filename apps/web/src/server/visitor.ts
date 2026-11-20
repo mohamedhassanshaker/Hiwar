@@ -161,7 +161,8 @@ export async function visitorMessage(input: VisitorSend): Promise<{ conversation
   await addMessage(db, c, "visitor", stored);
   if (repeated) await db.update(schema.conversations).set({ repeatedQuestion: true }).where(eq(schema.conversations.id, c.id));
   if (c.state === "HUMAN_ACTIVE") {
-    await addMessage(db, c, "event", "Delivered to the owner only. The AI did not reply.");
+    const owner = c.ownerUserId ? await db.query.users.findFirst({ where: eq(schema.users.id, c.ownerUserId), columns: { name: true } }) : undefined;
+    await addMessage(db, c, "event", `Delivered to ${owner?.name ?? "the owner"} only. The AI did not reply.`);
   } else if (c.state === "HANDOVER_PENDING") {
     await addMessage(db, c, "event", "Queued. It goes to whoever claims this conversation.");
   }
@@ -240,14 +241,16 @@ export async function aiTurn(conversationId: string): Promise<void> {
   const config = await configOf(c);
   if (!deployment || !org || !config) return;
 
-  const allow = c.aiCounted ? ({ allowed: true, overage: false, rateAed: 0 } as const) : await allowance(org, deployment);
+  const allow = c.aiCounted ? ({ allowed: true, overage: false, rateAed: 0 } as const) : await allowance(org, deployment, c.id);
   if (!allow.allowed) {
     const language = c.visitor.language;
     const settings = deployment.settings;
     const message = allow.behaviour === "offline" ? settings.offlineMessage[language] : settings.fallbackMessage[language];
-    await addMessage(db, c, "event", `Limit reached (${allow.reason}). The AI did not reply; the visitor saw: "${message}"`);
+    // DEP-002 FR-012, BIL-001 FR-005: the visitor sees the fallback (or offline) message.
+    await addMessage(db, c, "event", `Limit reached (${allow.reason}). The AI did not reply; the visitor saw: "${message}"`, { meta: { visitorNotice: message } });
     if (allow.behaviour === "stop_route") await requestPerson(c.id, "other", "Limit reached: routed to a person.");
     else await db.update(schema.conversations).set({ followUpOffered: true }).where(eq(schema.conversations.id, c.id));
+    await checkAlerts(org);
     await announce(c);
     return;
   }
@@ -313,7 +316,8 @@ export async function aiTurn(conversationId: string): Promise<void> {
     return true;
   });
   if (!stored) return;
-  if (result.unanswered) await recordUnanswered(c.orgId, result.unanswered, result.language);
+  // KNO-002 FR-005: the reply the AI gave is the suggested answer staff start from.
+  if (result.unanswered) await recordUnanswered(c.orgId, result.unanswered, result.language, result.text);
   for (const t of result.tools) {
     if (t.key === "send_transcript" && t.status === "ran") await sendTranscript(c, String(t.inputs.email ?? ""));
     // INB-003 FR-007: write tools that ran automatically are in the audit log too.

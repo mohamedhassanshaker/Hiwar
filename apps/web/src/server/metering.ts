@@ -32,7 +32,7 @@ export type Allowance =
   | { allowed: false; behaviour: "stop_route" | "offline"; reason: string };
 
 /** Whether a new AI conversation may start on this deployment now. */
-export async function allowance(org: Org, deployment: Deployment): Promise<Allowance> {
+export async function allowance(org: Org, deployment: Deployment, conversationId?: string): Promise<Allowance> {
   if (org.status === "trial_ended" || org.status === "suspended") return { allowed: false, behaviour: "offline", reason: "plan" };
   if (org.paymentFailedAt && Date.now() - org.paymentFailedAt.getTime() > 7 * 86_400_000) {
     return { allowed: false, behaviour: "offline", reason: "payment" };
@@ -44,7 +44,8 @@ export async function allowance(org: Org, deployment: Deployment): Promise<Allow
   const [{ open }] = await db
     .select({ open: sql<number>`count(*)::int` })
     .from(schema.conversations)
-    .where(and(eq(schema.conversations.deploymentId, deployment.id), ne(schema.conversations.state, "CLOSED")));
+    // DEP-002 FR-011: the limit is on the other open conversations; the one asking is not counted.
+    .where(and(eq(schema.conversations.deploymentId, deployment.id), ne(schema.conversations.state, "CLOSED"), conversationId ? ne(schema.conversations.id, conversationId) : undefined));
   if (open >= settings.concurrentLimit) return { allowed: false, behaviour: behaviour(settings.limitBehaviour), reason: "concurrent" };
 
   if (settings.monthlyQuota) {
@@ -105,14 +106,26 @@ export async function checkAlerts(org: Org): Promise<void> {
       .returning();
     if (inserted.length === 0) continue;
     const title = `You have used ${percent}% of this month's AI conversations`;
-    await notify(org.id, "usage", title, "/billing");
-    const recipients = await db
-      .select({ email: schema.users.email })
-      .from(schema.members)
-      .innerJoin(schema.users, eq(schema.users.id, schema.members.userId))
-      .where(and(eq(schema.members.orgId, org.id), sql`${schema.members.role} in ('owner','billing')`));
-    for (const r of recipients) {
-      await sendMail(r.email, `Hiwar: ${title}`, `${org.name} has used ${used.count} of ${limits.aiConversations} AI conversations this month (${percent}%).\nSee Plan and usage to upgrade or change what happens at the limit.`);
+    await alertOwners(org, title, `${org.name} has used ${used.count} of ${limits.aiConversations} AI conversations this month (${percent}%).\nSee Plan and usage to upgrade or change what happens at the limit.`);
+  }
+  // FR-010 (AC-BIL-001-08): reaching the overage cap alerts once per period.
+  const cap = Number(org.overageCapAed);
+  if (org.limitBehaviour === "overage" && cap > 0 && used.overageAed >= cap) {
+    const inserted = await db.insert(schema.alertsSent).values({ orgId: org.id, period, threshold: "cap" }).onConflictDoNothing().returning();
+    if (inserted.length > 0) {
+      const title = `The monthly overage cap of AED ${cap.toFixed(2)} is reached`;
+      await alertOwners(org, title, `${org.name} reached its overage cap of AED ${cap.toFixed(2)} this month. New AI conversations get the fallback message and go to a person until the next period.\nSee Plan and usage to raise the cap or upgrade.`);
     }
   }
+}
+
+/** A bell notification and an email to the Owner and Billing members. */
+async function alertOwners(org: Org, title: string, body: string): Promise<void> {
+  await notify(org.id, "usage", title, "/billing");
+  const recipients = await db
+    .select({ email: schema.users.email })
+    .from(schema.members)
+    .innerJoin(schema.users, eq(schema.users.id, schema.members.userId))
+    .where(and(eq(schema.members.orgId, org.id), sql`${schema.members.role} in ('owner','billing')`));
+  for (const r of recipients) await sendMail(r.email, `Hiwar: ${title}`, body);
 }

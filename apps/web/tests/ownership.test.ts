@@ -101,6 +101,16 @@ describe("INB-002 single owner", () => {
     expect(again.runAi).toBe(false);
   });
 
+  it("AC-INB-002-16: a visitor message while a person owns the conversation goes only to them, named in the event", async () => {
+    const w = await world();
+    const c = await conversation(w);
+    await takeOver(w.members[1], c.id, c.version);
+    const sent = await visitorMessage({ deployment: w.deployment, token: c.visitorToken, text: "Still there?", visitor: { language: "en" } });
+    expect(sent.runAi).toBe(false);
+    const events = await db.query.messages.findMany({ where: eq(schema.messages.conversationId, c.id) });
+    expect(events.filter((m) => m.kind === "event").map((m) => m.text)).toContain(`Delivered to ${w.members[1].user.name} only. The AI did not reply.`);
+  });
+
   it("AC-INB-002-13: a visitor message within 24 hours reopens a closed conversation", async () => {
     const w = await world();
     const c = await conversation(w);

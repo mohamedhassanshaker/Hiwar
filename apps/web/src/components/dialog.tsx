@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, type KeyboardEvent, type ReactNode } from "react";
 
 /**
  * A modal dialog on the native <dialog> element, which traps focus and closes with Escape
@@ -22,6 +22,8 @@ export function Dialog({
   footer?: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  // A screen can hold several dialogs; each needs its own title id for its accessible name.
+  const titleId = useId();
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -29,10 +31,10 @@ export function Dialog({
     if (!open && el.open) el.close();
   }, [open]);
   return (
-    <dialog ref={ref} className="dialog native-dialog" aria-labelledby="dialog-title" onClose={onClose} onCancel={onClose}>
+    <dialog ref={ref} className="dialog native-dialog" aria-labelledby={titleId} onClose={onClose} onCancel={onClose} onKeyDown={keepFocusInside}>
       <div className="dialog-h row between top">
         <div className="col gap-4">
-          <h2 className="h3" id="dialog-title">
+          <h2 className="h3" id={titleId}>
             {title}
           </h2>
           {description && <p className="sm muted">{description}</p>}
@@ -45,6 +47,27 @@ export function Dialog({
       {footer && <div className="dialog-f row end gap-8">{footer}</div>}
     </dialog>
   );
+}
+
+const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+
+/**
+ * A modal <dialog> keeps focus out of the page behind it, but Tab from its last control moves
+ * on to the browser's own interface. Wrapping Tab and Shift+Tab keeps focus inside (PLT-005 FR-009).
+ */
+function keepFocusInside(event: KeyboardEvent<HTMLDialogElement>): void {
+  if (event.key !== "Tab") return;
+  const items = Array.from(event.currentTarget.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((el) => el.offsetParent !== null);
+  if (items.length === 0) return;
+  const first = items[0];
+  const last = items[items.length - 1];
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
 }
 
 /** A confirmation dialog for destructive or important actions. */

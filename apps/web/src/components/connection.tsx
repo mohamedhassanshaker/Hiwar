@@ -11,25 +11,38 @@ export function ConnectionBanner({ orgId }: { orgId: string }) {
   const router = useRouter();
   const [online, setOnline] = useState(true);
   useEffect(() => {
-    const up = () => setOnline(true);
-    const down = () => setOnline(false);
-    window.addEventListener("online", up);
-    window.addEventListener("offline", down);
-    const source = new EventSource("/api/live?topic=org");
+    let source: EventSource | null = null;
     let pending: ReturnType<typeof setTimeout> | null = null;
-    source.onmessage = () => {
+    const refresh = () => {
       if (pending) return;
       pending = setTimeout(() => {
         pending = null;
         router.refresh();
       }, 300);
     };
-    source.onopen = () => setOnline(true);
-    source.onerror = () => setOnline(navigator.onLine && source.readyState === EventSource.OPEN);
+    const connect = () => {
+      source?.close();
+      source = new EventSource("/api/live?topic=org");
+      source.onmessage = refresh;
+      source.onopen = () => setOnline(true);
+      source.onerror = () => setOnline(navigator.onLine && source?.readyState === EventSource.OPEN);
+    };
+    // PLT-008 FR-009: after a network loss the browser may give the stream up for good, so it is
+    // opened again, and the page catches up on what changed while it was away.
+    const up = () => {
+      setOnline(true);
+      if (!source || source.readyState === EventSource.CLOSED) connect();
+      refresh();
+    };
+    const down = () => setOnline(false);
+    window.addEventListener("online", up);
+    window.addEventListener("offline", down);
+    connect();
     return () => {
       window.removeEventListener("online", up);
       window.removeEventListener("offline", down);
-      source.close();
+      source?.close();
+      if (pending) clearTimeout(pending);
     };
   }, [orgId, router]);
   if (online) return null;

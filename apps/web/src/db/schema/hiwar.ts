@@ -423,6 +423,8 @@ export interface MessageMeta {
   tokens?: { input: number; output: number; costAed: number };
   lowConfidence?: boolean;
   reasonCode?: string;
+  /** Text the widget shows the visitor for this event, such as the fallback at a usage limit. */
+  visitorNotice?: string;
 }
 
 export const messages = pgTable(

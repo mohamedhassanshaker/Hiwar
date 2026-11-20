@@ -37,6 +37,18 @@ export function can(role: Role, capability: Capability): boolean {
   return MATRIX[capability].includes(role);
 }
 
+/** The first control panel screen `role` may open, in sidebar order; where a refused request lands. */
+export function homeFor(role: Role): string {
+  const screens: [string, Capability][] = [
+    ["/conversations", "conversations"],
+    ["/agents", "manage_agents"],
+    ["/analytics", "analytics"],
+    ["/billing", "billing"],
+    ["/team", "team"],
+  ];
+  return screens.find(([, capability]) => can(role, capability))?.[0] ?? "/profile";
+}
+
 /** Support Agents see analytics without cost figures or export (ANA-001 FR-016). */
 export function analyticsLimited(role: Role): boolean {
   return role === "support_agent";

@@ -8,7 +8,8 @@ type Lang = "en" | "ar";
 type Line =
   | { kind: "visitor" | "ai"; text: string; at: string; citations?: string[] }
   | { kind: "person"; text: string; name: string; at: string }
-  | { kind: "status"; status: "waiting" | "joined" | "left" | "cancelled" | "reopened"; at: string };
+  | { kind: "status"; status: "waiting" | "joined" | "left" | "cancelled" | "reopened"; at: string }
+  | { kind: "notice"; text: string; at: string };
 
 interface State {
   status: string;
@@ -111,7 +112,8 @@ export function Widget({ widgetKey, page, preview }: { widgetKey: string; page: 
         .then((data) => {
           if (data) {
             setState(data);
-            setOnline(true);
+            // A refresh that started before the connection dropped may finish after it.
+            setOnline(navigator.onLine);
           }
         })
         .catch(() => setOnline(false)),
@@ -271,6 +273,7 @@ export function Widget({ widgetKey, page, preview }: { widgetKey: string; page: 
                       line.status === "waiting" ? t.waitLine : line.status === "joined" ? t.joined : line.status === "left" ? t.left(state.agentName) : line.status === "cancelled" ? t.cancelled : "";
                     return text ? <span key={i} className="st">{text}</span> : null;
                   }
+                  if (line.kind === "notice") return <span key={i} className="st" dir="auto">{line.text}</span>;
                   if (line.kind === "visitor") return <div key={i} className="bubble-me" dir="auto">{line.text}</div>;
                   if (i === 0 && line.kind === "ai") return null;
                   return (

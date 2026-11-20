@@ -82,7 +82,8 @@ export default async function ConversationsPage({
         ...(c.visitor.email ? [["Email", c.visitor.email] as [string, string]] : []),
         ...(c.visitor.phone ? [["Phone", c.visitor.phone] as [string, string]] : []),
       ],
-      history: t.history.map((h) => ({ t: h.event, d: `${time(h.createdAt)} · ${h.reasonCode} · v${h.version}` })),
+      // INB-002 FR-011: the reason includes its note, such as "Released by {name}".
+      history: t.history.map((h) => ({ t: h.event, d: `${time(h.createdAt)} · ${h.reasonCode}${h.note ? ` · ${h.note}` : ""} · v${h.version}` })),
       used: [
         ...t.messages.flatMap((m) => (m.meta.citations ?? []).map((x) => ({ t: x.name, d: `Chunk ${x.chunk} · confidence ${x.confidence}` }))),
         ...t.tools.map((tc) => ({
