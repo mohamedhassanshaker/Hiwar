@@ -11,6 +11,8 @@ from __future__ import annotations
 import asyncio
 import ipaddress
 import socket
+import ssl
+from functools import cache
 from urllib.parse import urljoin, urlsplit
 
 import httpx
@@ -23,6 +25,16 @@ MAX_BYTES = 5_000_000
 
 class EgressRefused(Exception):
     """The address is not allowed, or the response is too large."""
+
+
+@cache
+def _tls() -> ssl.SSLContext:
+    """The public CAs, plus `extra_ca_certs` where a private CA signs a site this service may
+    fetch (a local cluster's own gateway); it adds to the public bundle rather than replacing it."""
+    context = httpx.create_ssl_context()
+    if settings.extra_ca_certs:
+        context.load_verify_locations(cafile=settings.extra_ca_certs)
+    return context
 
 
 async def _check_host(url: str) -> None:
@@ -58,7 +70,7 @@ async def fetch(
     timeout: float = 15.0,
 ) -> httpx.Response:
     """One request with the guard on every redirect hop; the body is capped at 5 MB."""
-    async with httpx.AsyncClient(follow_redirects=False, timeout=timeout) as client:
+    async with httpx.AsyncClient(follow_redirects=False, timeout=timeout, verify=_tls()) as client:
         current = url
         for _ in range(MAX_REDIRECTS + 1):
             await _check_host(current)

@@ -3,8 +3,6 @@ import { endSession, sessionView } from "@/features/engage/widget-session";
 
 /** `GET` the session as it stands; `DELETE` ends it (widget specification 14). */
 
-export const instant = false;
-
 type Context = { params: Promise<{ id: string }> };
 
 /** The session's current view with a fresh token. */

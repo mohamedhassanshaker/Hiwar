@@ -32,7 +32,7 @@ npm run db:seed:all                               # the AI module seed and the G
 npm run dev                                       # http://localhost:3000
 ```
 
-Sign up at `/sign-up`; the verification email arrives in Mailpit. The demo organization's accounts use the password `demo-password-1` (for example `noura.demo@gulfbites.example`). To try the widget locally, create a deployment, add `http://localhost:3000/demo-site/<public key>` as an allowed origin, verify it and make the deployment live, then open that address.
+Sign up at `/sign-up`; the verification email arrives in Mailpit. The demo organization's accounts use the password `demo-password-1` (for example `noura.demo@gulfbites.example`). To try the widget locally, set `ALLOW_PRIVATE_EGRESS=1` in `apps/web/.env.local` (the kind chart sets it), create a deployment, add `http://localhost:3000/demo-site/<public key>` as an allowed origin, verify it and make the deployment live, then open that address.
 
 Give a staff account access to the operator portal at `/ops`, including the AI capabilities at `/ops/ai`, with `npm run ops:grant -- <email> platform_admin`.
 

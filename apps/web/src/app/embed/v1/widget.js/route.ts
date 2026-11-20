@@ -13,8 +13,6 @@ import { env } from "@/lib/env";
  *     data-position="bottom-right" data-open="false" data-context='{"page":"customs"}' defer></script>
  */
 
-export const instant = false;
-
 /**
  * The loader's source with the platform origin inlined. In the browser it reads the script tag's
  * `data-*` attributes, asks `/embed/v1/config` whether this page may load the deployment, draws

@@ -9,7 +9,6 @@ import { channels } from "@/lib/valkey";
  * wrote; the browser re-reads what it shows under its own permissions.
  */
 
-export const instant = false;
 export const maxDuration = 300;
 
 /** Streams the conversations channel. 403 without `conversations:read`, 501 without live updates. */

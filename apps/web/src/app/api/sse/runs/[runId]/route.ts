@@ -11,8 +11,6 @@ import { NotPermitted, requireSession } from "@/lib/session";
  * (D161) is given them.
  */
 
-// Never cached and never prerendered: this answers a live request.
-export const instant = false;
 export const maxDuration = 300;
 
 /**

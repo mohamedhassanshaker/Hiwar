@@ -10,8 +10,6 @@ import "./widget.css";
  * deployment's allowed origins frame it.
  */
 
-export const instant = false;
-
 /**
  * Renders the widget frame for an enabled deployment, in Arabic when `?lang=ar` and English
  * otherwise, passing on `page`, `host` and `preview=1`; a deployment that is not enabled gets a

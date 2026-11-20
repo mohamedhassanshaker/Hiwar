@@ -6,9 +6,6 @@ import { handleMcpRequest } from "@/mcp/server";
  * (specification 7.5.6).
  */
 
-// Never cached and never prerendered: this answers a live request.
-export const instant = false;
-
 /**
  * Hands each request to the platform MCP server: 401 without a valid run token or client key in
  * `Authorization`, otherwise the JSON-RPC response for that caller.

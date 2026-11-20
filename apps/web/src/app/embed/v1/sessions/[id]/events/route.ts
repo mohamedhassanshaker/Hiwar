@@ -5,8 +5,6 @@ import { CLIENT_EVENTS, clientEvent, WidgetRefused } from "@/features/engage/wid
 
 /** `POST /embed/v1/sessions/{id}/events`: what the widget itself sees (widget specification 15). */
 
-export const instant = false;
-
 const eventInput = z.object({ name: z.enum(CLIENT_EVENTS), props: z.record(z.string(), z.unknown()).default({}) });
 
 /** Records one widget event for the token's conversation; 204, or 400 for an unknown event name. */

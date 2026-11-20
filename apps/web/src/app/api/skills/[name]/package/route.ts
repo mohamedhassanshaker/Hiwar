@@ -4,9 +4,6 @@ import { packageRefusal } from "../../refusal";
 
 /** A skill's current version as a `.zip`, for Download as .zip on its detail. */
 
-// Never cached and never prerendered: what this answers depends on who is asking.
-export const instant = false;
-
 /** 403 without `skills:read`, 404 for no such skill or no stored files, 409 for a bundled skill or one past the limits. */
 export async function GET(_request: Request, context: { params: Promise<{ name: string }> }): Promise<Response> {
   const { name } = await context.params;

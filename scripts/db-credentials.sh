@@ -70,8 +70,8 @@ superuser="$(encode "$(password_in "${cluster}-superuser")")"
 
 host="${cluster}-rw.${data_namespace}.svc.cluster.local"
 
-kubectl -n "${app_namespace}" patch secret hiwar-app --type merge -p "{\"stringData\":{\"DATABASE_URL\":\"$(url hiwar "${app}" "${cluster}-pooler" hiwar)\",\"DATABASE_RO_URL\":\"$(url hiwar "${app}" "${cluster}-r" hiwar)\",\"DATABASE_MIGRATE_URL\":\"$(url postgres "${superuser}" "${cluster}-rw" hiwar)\",\"KB_DATABASE_URL\":\"postgresql://hiwar:${app}@${host}:5432/hiwar_kb?sslmode=prefer\"}}" >/dev/null
-echo "  ${app_namespace}/hiwar-app DATABASE_URL, DATABASE_RO_URL, DATABASE_MIGRATE_URL, KB_DATABASE_URL"
+kubectl -n "${app_namespace}" patch secret hiwar-app --type merge -p "{\"stringData\":{\"DATABASE_URL\":\"$(url hiwar "${app}" "${cluster}-pooler" hiwar)\",\"DATABASE_RO_URL\":\"$(url hiwar "${app}" "${cluster}-r" hiwar)\",\"DATABASE_LISTEN_URL\":\"$(url hiwar "${app}" "${cluster}-rw" hiwar)\",\"DATABASE_MIGRATE_URL\":\"$(url postgres "${superuser}" "${cluster}-rw" hiwar)\",\"KB_DATABASE_URL\":\"postgresql://hiwar:${app}@${host}:5432/hiwar_kb?sslmode=prefer\"}}" >/dev/null
+echo "  ${app_namespace}/hiwar-app DATABASE_URL, DATABASE_RO_URL, DATABASE_LISTEN_URL, DATABASE_MIGRATE_URL, KB_DATABASE_URL"
 
 # Temporal's chart takes the user and the password; Phoenix takes one URL.
 apply_secret "${ai_namespace}" "${cluster}-temporal"   --from-literal=username=hiwar   --from-literal=password="${raw_app}"

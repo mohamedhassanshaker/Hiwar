@@ -11,7 +11,6 @@ import { logServerError } from "@/lib/logger";
  * filtered by the caller.
  */
 
-export const instant = false;
 export const maxDuration = 300;
 
 const REFUSAL_STATUS: Record<string, number> = {

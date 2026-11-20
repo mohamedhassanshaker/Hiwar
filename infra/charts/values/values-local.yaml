@@ -11,6 +11,9 @@ config:
   logLevel: debug
   # The demo customer page is served by this cluster, at a private address.
   allowPrivateEgress: true
+  # The demo page is served over the gateway, whose certificate the local CA signs
+  # (infra/kind/local-ca.yaml); the web container must trust it to verify that origin.
+  trustIssuer: hiwar-local
   # Traces go to Phoenix, the chart default. With ../cluster-monitoring/install.sh run, set
   # otlpEndpoint: http://otel-gateway.monitoring.svc.cluster.local:4318/v1/traces to add OpenSearch.
 

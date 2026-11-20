@@ -9,8 +9,6 @@ import { logger } from "@/lib/logger";
  * POST is verified against the channel's inbound secret before anything is read from it.
  */
 
-export const instant = false;
-
 /** Public reachability check: whether the channel exists and is enabled, 404 when it does not. */
 export async function GET(_request: Request, context: { params: Promise<{ channelType: string }> }): Promise<Response> {
   const { channelType } = await context.params;

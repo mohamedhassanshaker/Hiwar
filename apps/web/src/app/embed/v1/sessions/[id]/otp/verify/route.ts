@@ -8,8 +8,6 @@ import { verifyOtp, WidgetRefused } from "@/features/engage/widget-session";
  * identity check directly, never through a model and never into the transcript.
  */
 
-export const instant = false;
-
 const codeInput = z.object({ code: z.string().trim().max(12) });
 
 /** Checks the code against the current verify step; 400 for an unreadable code. */

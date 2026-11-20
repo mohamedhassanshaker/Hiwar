@@ -6,7 +6,6 @@ import { widgetStream } from "@/features/engage/widget-stream";
  * token comes in the query string, because an `EventSource` cannot set a header.
  */
 
-export const instant = false;
 export const maxDuration = 300;
 
 /** Opens the session's event stream; a token refusal answers in the protocol's error shape. */

@@ -11,7 +11,6 @@ import { channels, liveUpdatesConfigured } from "@/lib/valkey";
  * the stream as well.
  */
 
-export const instant = false;
 export const maxDuration = 300;
 
 /** Streams the conversation's channel. 404 for no such conversation, 403 without `conversations:read`, 501 without live updates. */

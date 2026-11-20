@@ -6,8 +6,6 @@ import { sendAction, WidgetRefused } from "@/features/engage/widget-session";
 
 /** `POST /embed/v1/sessions/{id}/actions`: a chip, a button or a field (widget specification 6.4). */
 
-export const instant = false;
-
 const step = z.string().max(200).nullable().optional();
 const actionInput = z.discriminatedUnion("type", [
   z.object({ type: z.literal("postback"), payload: z.object({ text: z.string().max(4000) }), step }),

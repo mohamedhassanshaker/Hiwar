@@ -5,9 +5,6 @@ import { packageRefusal } from "../../refusal";
 
 /** One file of a skill's current version (`?path=`), inline or, with `download=1`, as a download. */
 
-// Never cached and never prerendered: what this answers depends on who is asking.
-export const instant = false;
-
 /**
  * 400 for a path that leaves the package, 403 without `skills:read`, 404 for no such skill or
  * file. Served as text, a raster image or bytes, never as a type the browser would run.

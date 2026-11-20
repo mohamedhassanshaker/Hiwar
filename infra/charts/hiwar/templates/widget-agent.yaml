@@ -46,6 +46,14 @@ spec:
             - { name: MODEL_BASE_URL, value: {{ .Values.widgetAgent.modelBaseUrl | quote }} }
             - { name: WEB_CALLBACK_URL, value: "http://web.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.web.port }}" }
             - { name: FILES_DIR, value: /files }
+            {{- if .Values.config.allowPrivateEgress }}
+            # Crawls may reach the demo customer page this cluster serves (values-local.yaml).
+            - { name: ALLOW_PRIVATE_EGRESS, value: "1" }
+            {{- end }}
+            {{- if .Values.config.trustIssuer }}
+            # The gateway's private CA, in addition to the public CAs (trust-ca.yaml).
+            - { name: EXTRA_CA_CERTS, value: /etc/hiwar-trust/ca.crt }
+            {{- end }}
             - { name: LOG_LEVEL, value: {{ .Values.config.logLevel | quote }} }
           # DATABASE_URL, MODEL_API_KEY and AGENT_SERVICE_TOKEN come from the Secret.
           envFrom:
@@ -62,9 +70,15 @@ spec:
           volumeMounts:
             - { name: files, mountPath: /files, readOnly: true }
             - { name: tmp, mountPath: /tmp }
+            {{- if .Values.config.trustIssuer }}
+            - { name: trust, mountPath: /etc/hiwar-trust, readOnly: true }
+            {{- end }}
       volumes:
         - { name: files, persistentVolumeClaim: { claimName: knowledge-files } }
         - { name: tmp, emptyDir: {} }
+        {{- if .Values.config.trustIssuer }}
+        - { name: trust, secret: { secretName: web-trust, items: [{ key: ca.crt, path: ca.crt }] } }
+        {{- end }}
 ---
 apiVersion: v1
 kind: Service

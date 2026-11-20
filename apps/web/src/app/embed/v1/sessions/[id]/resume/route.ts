@@ -5,8 +5,6 @@ import { resume, WidgetRefused } from "@/features/engage/widget-session";
 
 /** `POST /embed/v1/sessions/{id}/resume`: continue a saved scenario, or start over. */
 
-export const instant = false;
-
 const resumeInput = z.object({ choice: z.enum(["continue", "start_over"]) });
 
 /** Continues the saved scenario or starts a new conversation, as `choice` says; answers with the view. */

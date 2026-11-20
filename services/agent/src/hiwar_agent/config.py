@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -9,6 +12,18 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     database_url: str = "postgresql://hiwar:hiwar@localhost:5433/hiwar"
+
+    @field_validator("database_url")
+    @classmethod
+    def _libpq_url(cls, value: str) -> str:
+        """Drops node-postgres's `uselibpqcompat`, which psycopg rejects.
+
+        The web application and this service share DATABASE_URL (scripts/db-credentials.sh).
+        That flag only makes node-postgres read `sslmode` as libpq does, which psycopg already does.
+        """
+        parts = urlsplit(value)
+        query = [(k, v) for k, v in parse_qsl(parts.query, keep_blank_values=True) if k != "uselibpqcompat"]
+        return urlunsplit(parts._replace(query=urlencode(query)))
     model_base_url: str = "http://localhost:8090/v1"
     model_api_key: str = "stub"
     #: Provider model names per tier (AGT-001 FR-015).
@@ -26,6 +41,8 @@ class Settings(BaseSettings):
     files_dir: str = "../../.data/files"
     #: Allows HTTP tools and crawls to reach private addresses. Development only.
     allow_private_egress: bool = False
+    #: A CA bundle trusted in addition to the public CAs, for a site a private CA signs (local cluster).
+    extra_ca_certs: str | None = None
     #: Retrieval score under which an answer counts as low confidence.
     low_confidence_below: float = 0.2
 

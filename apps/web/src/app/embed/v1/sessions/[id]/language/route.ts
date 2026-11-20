@@ -5,8 +5,6 @@ import { setLanguage, WidgetRefused } from "@/features/engage/widget-session";
 
 /** `POST /embed/v1/sessions/{id}/language`: the widget's language for the rest of the session. */
 
-export const instant = false;
-
 const languageInput = z.object({ lang: z.enum(["en", "ar"]) });
 
 /** Sets the session's language to `en` or `ar` and answers with the view; 400 for anything else. */

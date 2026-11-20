@@ -8,8 +8,6 @@ import { publicConfig } from "@/features/engage/widget-session";
  * refused to that page anyway; this is so the visitor never sees a launcher that cannot open.
  */
 
-export const instant = false;
-
 const HEADERS = { "cache-control": "no-store", "access-control-allow-origin": "*" };
 
 const refused = (code: string, message: string, messageAr: string) =>

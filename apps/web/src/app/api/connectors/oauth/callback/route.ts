@@ -9,9 +9,6 @@ import { NotPermitted } from "@/lib/session";
  * the Connectors screen opens on the connector with what happened.
  */
 
-// Never cached and never prerendered: what this answers depends on who is asking.
-export const instant = false;
-
 /**
  * Finishes the OAuth Connect named by `state` with the returned `code`, then redirects (303) to
  * `/connectors` with `connect=connected` or `connect=failed` and the reason, cut at 300 characters.

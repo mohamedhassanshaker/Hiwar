@@ -28,7 +28,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           # Run from apps/web, where the migrator finds src/db/migrations.
           workingDir: /repo/apps/web
-          command: ["node", "db-migrate/migrate.mjs"]
+          command: ["node", "db-migrate/migrate.js"]
           securityContext: {{- toYaml .Values.containerSecurityContext | nindent 12 }}
           envFrom: [{ secretRef: { name: {{ .Values.secretName }} } }]
           resources: {{- toYaml .Values.jobs.dbMigrate.resources | nindent 12 }}

@@ -65,6 +65,11 @@ spec:
             - name: ALLOW_PRIVATE_EGRESS
               value: "1"
             {{- end }}
+            {{- if .Values.config.trustIssuer }}
+            # Trust the private CA of config.trustIssuer as well as the public ones (trust-ca.yaml).
+            - name: NODE_EXTRA_CA_CERTS
+              value: /etc/hiwar-trust/ca.crt
+            {{- end }}
           envFrom:
             {{- include "hiwar.envFrom" . | nindent 12 }}
           # Acceptance 19: readiness is the health endpoint the System screen aggregates. It
@@ -88,10 +93,16 @@ spec:
             - { name: tmp, mountPath: /tmp }
             # Customer knowledge files, read by the widget agent (FILES_DIR).
             - { name: files, mountPath: /files }
+            {{- if .Values.config.trustIssuer }}
+            - { name: trust, mountPath: /etc/hiwar-trust, readOnly: true }
+            {{- end }}
       volumes:
         - { name: cache, emptyDir: {} }
         - { name: tmp, emptyDir: {} }
         - { name: files, persistentVolumeClaim: { claimName: knowledge-files } }
+        {{- if .Values.config.trustIssuer }}
+        - { name: trust, secret: { secretName: web-trust, items: [{ key: ca.crt, path: ca.crt }] } }
+        {{- end }}
 ---
 apiVersion: v1
 kind: Service

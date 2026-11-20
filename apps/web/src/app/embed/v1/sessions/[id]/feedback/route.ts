@@ -5,8 +5,6 @@ import { feedback, WidgetRefused } from "@/features/engage/widget-session";
 
 /** `POST /embed/v1/sessions/{id}/feedback`: thumbs on one message, or the rating at the end. */
 
-export const instant = false;
-
 const feedbackInput = z.object({
   messageId: z.string().max(32).optional(),
   value: z.enum(["up", "down"]).optional(),

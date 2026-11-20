@@ -1,8 +1,12 @@
 import { env } from "@/server/env";
 
-/** Development only: a mock customer page with the install snippet, for verifying an origin and trying the widget locally. */
+/**
+ * A mock customer page with the install snippet, for verifying an origin and trying the widget on a
+ * developer machine. Served only where ALLOW_PRIVATE_EGRESS is set, which marks a deployment whose
+ * customer page is served by the platform itself (development server, local kind cluster).
+ */
 export async function GET(_: Request, { params }: { params: Promise<{ key: string }> }) {
-  if (process.env.NODE_ENV === "production") return new Response("Not found", { status: 404 });
+  if (process.env.ALLOW_PRIVATE_EGRESS !== "1") return new Response("Not found", { status: 404 });
   const { key } = await params;
   const safe = key.replace(/[^a-zA-Z0-9_]/g, "");
   const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Gulf Bites</title>

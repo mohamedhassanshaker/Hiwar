@@ -18,7 +18,9 @@ const live = state.hiwarLive;
 
 function start(): Promise<void> {
   live.started ??= (async () => {
-    const client = new Client({ connectionString: env().DATABASE_URL });
+    // LISTEN holds one session open, so it bypasses the pooler, whose transaction mode never
+    // delivers notifications; without a pooler (development) DATABASE_URL is already direct.
+    const client = new Client({ connectionString: env().DATABASE_LISTEN_URL ?? env().DATABASE_URL });
     client.on("notification", (message) => {
       if (!message.payload) return;
       const { topic, event } = JSON.parse(message.payload) as { topic: string; event: unknown };

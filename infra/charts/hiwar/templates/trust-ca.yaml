@@ -1,0 +1,17 @@
+{{- if .Values.config.trustIssuer }}
+# A certificate from `config.trustIssuer` exists only for its `ca.crt`: cert-manager writes the
+# issuer's CA beside it, which gives the web container a CA bundle to trust (NODE_EXTRA_CA_CERTS)
+# without copying a Secret across namespaces.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: web-trust
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "hiwar.labels" . | nindent 4 }}
+spec:
+  secretName: web-trust
+  commonName: web-trust.{{ .Values.namespace }}.svc.cluster.local
+  privateKey: { algorithm: ECDSA, size: 256 }
+  issuerRef: { name: {{ .Values.config.trustIssuer }}, kind: ClusterIssuer, group: cert-manager.io }
+{{- end }}

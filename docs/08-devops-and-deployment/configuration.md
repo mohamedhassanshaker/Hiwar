@@ -13,7 +13,8 @@ last-updated: 2026-11-19
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `DATABASE_URL` | `postgresql://hiwar:hiwar@localhost:5433/hiwar` | PostgreSQL with pgvector |
+| `DATABASE_URL` | `postgresql://hiwar:hiwar@localhost:5433/hiwar` | PostgreSQL with pgvector; through the pooler in a cluster |
+| `DATABASE_LISTEN_URL` | `DATABASE_URL` | A direct (unpooled) connection for the one `LISTEN` session behind live updates; a transaction-mode pooler does not deliver `NOTIFY`. `scripts/db-credentials.sh` writes it in a cluster |
 | `APP_URL` | `http://localhost:3000` | Public address, used in links, the snippet and cookie security |
 | `SECRET_KEY` | development key | 32 bytes, base64; seals TOTP secrets and tool secrets. Required in production |
 | `AGENT_SERVICE_URL` | `http://localhost:8088` | Agent service |
@@ -21,7 +22,8 @@ last-updated: 2026-11-19
 | `SMTP_URL` | `smtp://localhost:1025` | Mail server (Mailpit locally) |
 | `MAIL_FROM` | `Hiwar <no-reply@hiwar.local>` | Sender of system email |
 | `FILES_DIR` | `../../.data/files` | Uploaded knowledge files; the agent service mounts the same folder |
-| `ALLOW_PRIVATE_EGRESS` | unset | `1` lets domain verification reach private addresses. Development only |
+| `ALLOW_PRIVATE_EGRESS` | unset | `1` lets domain verification reach private addresses and serves the demo customer page `/demo-site/<key>`. Development and the local cluster only |
+| `NODE_EXTRA_CA_CERTS` | unset | A CA bundle trusted besides the public CAs; the chart sets it from `config.trustIssuer` so a cluster can verify the demo page its own gateway serves |
 | `STRIPE_SECRET_KEY` | unset | Turns on the payment provider. Unset, Plan and usage uses its development card dialog |
 | `STRIPE_WEBHOOK_SECRET` | unset | Verifies `POST /api/payments/webhook`; subscribe the endpoint to `payment_intent.succeeded` and `payment_intent.payment_failed` |
 | `STRIPE_API_BASE` | unset | Points the client at another API host, for example `http://localhost:12111` for `stripe-mock` in tests |
@@ -49,7 +51,8 @@ Each module variable is optional: without it the screens still work and the Syst
 | `WEB_CALLBACK_URL` | `http://localhost:3000` | Where source status is reported |
 | `AGENT_SERVICE_TOKEN` | `dev-agent-token` | Must equal the web application's |
 | `FILES_DIR` | `/files` in the container | Read-only mount of uploaded files |
-| `ALLOW_PRIVATE_EGRESS` | `0` | Development only |
+| `ALLOW_PRIVATE_EGRESS` | `0` | Crawls and HTTP tools may reach private addresses. Development and the local cluster only |
+| `EXTRA_CA_CERTS` | unset | A CA bundle trusted besides the public CAs (chart: `config.trustIssuer`) |
 | `LOW_CONFIDENCE_BELOW` | `0.2` | Retrieval score under which an answer is low confidence |
 
 ## Organization settings kept in the database

@@ -9,8 +9,6 @@ import { getSession, NotPermitted, requirePermission } from "@/lib/session";
  * visitor's earlier one back up. `preview` is a designer in the console, signed in.
  */
 
-export const instant = false;
-
 const startInput = z.object({
   deployment: z.string().trim().min(1).max(64),
   lang: z.enum(["en", "ar"]).default("en"),

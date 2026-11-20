@@ -19,8 +19,7 @@ import { NotPermitted } from "@/lib/session";
  * handed a finished run and a token, never a database and never a session.
  */
 
-// A run streams for as long as it takes, and nothing here may be cached.
-export const instant = false;
+// A run streams for as long as it takes.
 export const maxDuration = 300;
 
 /** What the AG-UI client sends. Only the parts this route needs are named. */

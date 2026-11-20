@@ -5,8 +5,6 @@ import { sendMessage, WidgetRefused } from "@/features/engage/widget-session";
 
 /** `POST /embed/v1/sessions/{id}/messages`: text the visitor typed (widget specification 14). */
 
-export const instant = false;
-
 // The 4000-character limit is `sendMessage`'s rule, applied to the trimmed text, so it answers
 // `VALIDATION_FAILED` with the reason; a length cap here would pre-empt it with `BAD_REQUEST`.
 const messageInput = z.object({

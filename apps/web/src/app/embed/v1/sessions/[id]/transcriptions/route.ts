@@ -5,8 +5,6 @@ import { MAX_AUDIO_BYTES } from "@/lib/transcription";
 
 /** `POST /embed/v1/sessions/{id}/transcriptions`: the raw recording as the body (`audio/*`); `{ text }` back (D386). */
 
-export const instant = false;
-
 /** Turns a visitor's recording into text for the composer; 400 for unreadable audio, 403 where Voice input is off. */
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;

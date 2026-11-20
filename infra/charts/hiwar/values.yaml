@@ -49,6 +49,10 @@ config:
   # Lets deployment origin verification fetch private addresses. Only for a developer machine,
   # where the customer page is served by this cluster.
   allowPrivateEgress: false
+  # A cert-manager ClusterIssuer whose CA the web container trusts for its own outbound HTTPS,
+  # for a cluster whose gateway certificate a private CA signs (kind: `hiwar-local`), so origin
+  # verification can fetch the customer page this cluster serves. Empty trusts the public CAs only.
+  trustIssuer: ""
   temporalAddress: temporal-frontend.hiwar-ai.svc.cluster.local:7233
   temporalNamespace: hiwar
   agwLlmUrl: http://ai-gateway.hiwar-ai.svc.cluster.local:8080

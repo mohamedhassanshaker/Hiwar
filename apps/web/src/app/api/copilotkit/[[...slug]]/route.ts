@@ -10,8 +10,6 @@ import { copilotRuntime } from "@/agents/runtime";
  * mounts the runtime's multi-route handler under the base path.
  */
 
-// Never cached and never prerendered: this answers a live request.
-export const instant = false;
 // A run streams for as long as it takes; the route must not be cut short.
 export const maxDuration = 300;
 

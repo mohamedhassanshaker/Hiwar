@@ -13,8 +13,6 @@ import { MAX_AUDIO_BYTES } from "@/lib/transcription";
  * running up provider cost.
  */
 
-export const instant = false;
-
 const PER_MINUTE = 30;
 
 /** A refusal the composer shows as it is, in both languages. */

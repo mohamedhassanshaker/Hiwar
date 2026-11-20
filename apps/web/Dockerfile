@@ -17,7 +17,7 @@ COPY apps/web ./
 COPY packages /repo/packages
 RUN npm run build
 # The db-migrate Job runs the migrator, which the standalone output does not carry.
-RUN npx tsc src/db/migrate.ts --outDir db-migrate --rootDir src \
+RUN npx tsc src/db/migrate.ts --outDir db-migrate --rootDir src/db \
     --module esnext --moduleResolution bundler --target es2023 --skipLibCheck \
  && echo '{"type":"module"}' > db-migrate/package.json
 
