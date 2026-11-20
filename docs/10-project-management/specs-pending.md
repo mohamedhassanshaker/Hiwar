@@ -4,7 +4,7 @@ status: draft
 owner: Project manager
 related: [specs-pending.md, specs-completed.md]
 version: 1.0
-last-updated: 2026-11-19
+last-updated: 2026-11-20
 ---
 
 # Spec backlog
@@ -15,8 +15,9 @@ The hint column shows the status of the spec's screens in the task backlog. It d
 
 <!-- rows:start -->
 
-| ID | Feature | Module | Screens | FRs | Implementation hint |
-| --- | --- | --- | --- | --- | --- |
-
+| ID | Feature | Module | Screens | FRs | Change requests | Implementation hint |
+| --- | --- | --- | --- | --- | --- | --- |
+| OPS-004 | [AI cost, margin and service health](../01-product-requirements/specs/ops/004-cost-and-health/spec.md) | OPS | O-Business (redesigned for Hiwar) | 5 |  |  |
+| ORG-003 | [Audit log](../01-product-requirements/specs/org/003-audit-log/spec.md) | ORG | C-Audit | 11 |  |  |
 
 <!-- rows:end -->
