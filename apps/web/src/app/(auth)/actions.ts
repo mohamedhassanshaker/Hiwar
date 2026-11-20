@@ -48,7 +48,12 @@ export async function signInAction(_: FormState, form: FormData): Promise<FormSt
     return { error: result.error };
   }
   await startSession(result.userId, result.orgId, !result.needsCode);
-  const next = safeNext(form.get("next"));
+  let next = safeNext(form.get("next"));
+  // Hiwar staff with no organization work in the operator portal, not a control panel.
+  if (!result.orgId && !next.startsWith("/ops")) {
+    const user = await db.query.users.findFirst({ where: eq(schema.users.id, result.userId), columns: { platformRole: true } });
+    if (user?.platformRole) next = "/ops";
+  }
   redirect(result.needsCode ? `/two-step?next=${encodeURIComponent(next)}` : next);
 }
 

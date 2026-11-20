@@ -1,7 +1,7 @@
 /**
  * PLT-006: the sample organization of the design, for demos and manual testing.
  * Idempotent: does nothing when the demo organization exists. Run with `npm run db:seed`.
- * Every demo account's password is `demo-password-1`.
+ * Every demo account's password is `demo-password-1`, including the operator portal accounts.
  */
 import { eq } from "drizzle-orm";
 
@@ -14,8 +14,29 @@ import { db, pool, schema } from "./index";
 
 const ORG = "Gulf Bites Restaurants (demo)";
 
+/**
+ * OPS-001 to OPS-011: Hiwar staff accounts for the operator portal at /ops, one per platform role.
+ * Demo data only; a real account gets its role with `npm run ops:grant`. They set up 2-step
+ * sign-in on their first visit to /ops, as every operator must.
+ */
+const OPERATORS: [string, string, "platform_admin" | "support_operator"][] = [
+  ["Salma Platform Admin", "ops.admin.demo@hiwar.example", "platform_admin"],
+  ["Omar Support Operator", "ops.support.demo@hiwar.example", "support_operator"],
+];
+
+async function seedOperators(): Promise<void> {
+  const passwordHash = await hashPassword("demo-password-1");
+  for (const [name, email, platformRole] of OPERATORS) {
+    await db
+      .insert(schema.users)
+      .values({ name, email, passwordHash, emailVerifiedAt: new Date(), platformRole })
+      .onConflictDoUpdate({ target: schema.users.email, set: { name, platformRole } });
+  }
+}
+
 async function main() {
   await ensurePlans();
+  await seedOperators();
   if (await db.query.organizations.findFirst({ where: eq(schema.organizations.name, ORG) })) {
     console.log("demo organization exists");
     return;
@@ -137,7 +158,7 @@ async function main() {
     ["staff", "Hi Rashid, this is Khalid from catering. Do you need halal-certified buffet service with serving staff?", "Khalid Saeed"],
   ], [["AI took the conversation", "first visitor message"], ["Handover requested", "agent_request"], ["Khalid Saeed took over", "support_takeover"]]);
 
-  console.log(`demo organization created: ${ORG}; sign in as noura.demo@gulfbites.example / demo-password-1; FAQ source ${faq.id} needs preparation (Retry in Knowledge)`);
+  console.log(`demo organization created: ${ORG}; sign in as noura.demo@gulfbites.example / demo-password-1 (operator portal: ops.admin.demo@hiwar.example); FAQ source ${faq.id} needs preparation (Retry in Knowledge)`);
 }
 
 await main();
